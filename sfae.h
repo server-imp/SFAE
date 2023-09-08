@@ -70,7 +70,7 @@ namespace sfae
 			{
 				*everModded = 0;
 
-				printf_s("changed everModded back to false!\n");
+				printf_s("Changed everModded back to false!\n");
 			}
 
 			std::this_thread::sleep_for(5ms);
