@@ -3,7 +3,7 @@ Allows you to earn achievements while using mods or console commands
 
 ## Info
 Made for and tested with the Steam version
-tested on Windows 10
+on Windows 10
 
 You can enable a console window if you want - simply create a file named "sfae.console" within the Starfield directory
 
