@@ -18,6 +18,8 @@ Or
 
 It should also work with any type of .ASI loader
 
+# Links
+Find it on Nexus Mods here: https://www.nexusmods.com/starfield/mods/1402
 
 ## Credits
-Thanks to SunBeam for posting his notes at https://fearlessrevolution.com/viewtopic.php?f=29&t=25679
+Thanks to **SunBeam** for posting his notes at https://fearlessrevolution.com/viewtopic.php?f=29&t=25679
