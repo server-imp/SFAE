@@ -57,7 +57,7 @@ namespace sfae
 			return;
 		}
 
-		// add read the everModded offset from this part of the games code
+		// read the everModded offset from this part of the games code
 		auto everModded = sig.add(24).rip().add(1).as<uint8_t*>();
 		printf_s("Located everModded at 0x%p\n", (void*)everModded);
 
