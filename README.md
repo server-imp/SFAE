@@ -15,7 +15,7 @@ This console window doesn't offer much but may be useful for debugging or just m
 ![image](https://github.com/server-imp/SFAE/assets/66805612/bacef837-bf61-4662-a3e7-6d546f2633d4)
 
 ## Installation
-Simply drop vcruntime140_1.dll within the Starfield directory (Same one that has Starfield.exe), that's it!
+Simply drop **vcruntime140_1.dll** within the Starfield directory (Same one that has Starfield.exe), that's it!
 
 Or
 
