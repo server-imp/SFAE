@@ -4,37 +4,6 @@
 
 namespace memory
 {
-	bool patch(LPVOID lpBaseAddress, VOID* lpBuffer, SIZE_T dwSize)
-	{
-		if (!lpBaseAddress || !lpBuffer)
-			return false;
-
-		if (dwSize == 0)
-			return false;
-
-		DWORD dwOldProtection{};
-		if (!VirtualProtect(lpBaseAddress, dwSize, PAGE_EXECUTE_READWRITE, &dwOldProtection))
-			return false;
-
-		if (memcpy_s(lpBaseAddress, dwSize, lpBuffer, dwSize))
-		{
-			VirtualProtect(lpBaseAddress, dwSize, dwOldProtection, &dwOldProtection);
-
-			return false;
-		}
-		
-		if (!FlushInstructionCache(GetCurrentProcess(), lpBaseAddress, dwSize))
-		{
-			VirtualProtect(lpBaseAddress, dwSize, dwOldProtection, &dwOldProtection);
-
-			return false;
-		}
-
-		VirtualProtect(lpBaseAddress, dwSize, dwOldProtection, &dwOldProtection);
-
-		return true;
-	}
-
 	class handle
 	{
 	private:
@@ -89,6 +58,35 @@ namespace memory
 			return add(as<uint32_t&>()).add(4);
 		}
 	};
+
+	bool patch(memory::handle address, std::vector<uint8_t> buffer)
+	{
+		if (!address.raw() || buffer.empty())
+			return false;
+
+		auto lpBaseAddress = address.as<LPVOID>();
+		DWORD dwOldProtection{};
+		if (!VirtualProtect(lpBaseAddress, buffer.size(), PAGE_EXECUTE_READWRITE, &dwOldProtection))
+			return false;
+
+		if (memcpy_s(lpBaseAddress, buffer.size(), buffer.data(), buffer.size()))
+		{
+			VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+
+			return false;
+		}
+
+		if (!FlushInstructionCache(GetCurrentProcess(), lpBaseAddress, buffer.size()))
+		{
+			VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+
+			return false;
+		}
+
+		VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+
+		return true;
+	}
 
 	namespace pattern
 	{

@@ -54,7 +54,7 @@ namespace sfae
 		printf_s("Located modCheck at 0x%p\n", pointers::modCheck.as<void*>());
 
 		uint8_t patch[]{
-				0x31, 0xC0, // xor eax, eax
+				0x31, 0xC0,	// xor eax, eax
 				0xC3,		// ret
 				0x90,		// nop
 				0x90,		// nop 
@@ -62,7 +62,16 @@ namespace sfae
 		};
 
 		printf_s("Patching... ");
-		if (!memory::patch(pointers::modCheck.as<void*>(), patch, 6))
+		if (!memory::patch(
+			pointers::modCheck, 
+			{
+				0x31, // xor eax, eax
+				0xC0, //
+				0xC3, // ret
+				0x90, // nop
+				0x90, // nop 
+				0x90  // nop
+			}))
 		{
 			MessageBoxA(0, "Couldn't patch modCheck!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't patch modCheck! Achievement Enabler will not function!\n");
@@ -157,17 +166,17 @@ namespace sfae
 
 		printf_s("Located modsMessage at 0x%p\n", pointers::modsMessage.as<void*>());
 
-		uint8_t patch[]{
-				0x90,		// nop
-				0x90,		// nop 
-				0x90,		// nop
-				0x90,		// nop 
-				0x90,		// nop 
-				0x90 		// nop
-		};
-
 		printf_s("Patching... ");
-		if (!memory::patch(pointers::modsMessage.as<void*>(), patch, 6))
+		if (!memory::patch(
+			pointers::modsMessage,
+			{
+				0x90, // nop
+				0x90, // nop
+				0x90, // nop
+				0x90, // nop
+				0x90, // nop
+				0x90  // nop
+			}))
 		{
 			MessageBoxA(0, "Couldn't patch modsMessage!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't patch modsMessage! Achievement Enabler will not function!\n");
@@ -220,16 +229,16 @@ namespace sfae
 
 		printf_s("Located consoleMessage at 0x%p\n", pointers::consoleMessage.as<void*>());
 
-		uint8_t patch[]{
-				0xC3,		// ret
-				0x90,		// nop
-				0x90,		// nop
-				0x90,		// nop
-				0x90		// nop
-		};
-
 		printf_s("Patching... ");
-		if (!memory::patch(pointers::consoleMessage.as<void*>(), patch, 5))
+		if (!memory::patch(
+			pointers::consoleMessage, 
+			{ 
+				0xC3, // ret
+				0x90, // nop
+				0x90, // nop
+				0x90, // nop
+				0x90  // nop
+			}))
 		{
 			MessageBoxA(0, "Couldn't patch consoleMessage!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't patch consoleMessage! Achievement Enabler will not function!\n");
