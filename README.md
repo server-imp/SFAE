@@ -12,7 +12,8 @@ You can enable a console window if you want - simply create a file named "sfae.c
 
 This console window doesn't offer much but may be useful for debugging or just making sure it works
 
-![image](https://github.com/server-imp/SFAE/assets/66805612/bacef837-bf61-4662-a3e7-6d546f2633d4)
+![image](https://github.com/server-imp/SFAE/assets/66805612/1f59d613-b95c-4201-8ebc-a1376724ab87)
+
 
 ## Installation
 Simply drop **vcruntime140_1.dll** within the Starfield directory (Same one that has Starfield.exe), that's it!
