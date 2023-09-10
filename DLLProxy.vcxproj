@@ -75,7 +75,7 @@
     <TargetName>dxgi</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>dxgi</TargetName>
+    <TargetName>vcruntime140_1</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -150,7 +150,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory.h" />
-    <ClInclude Include="pattern.h" />
     <ClInclude Include="sfae.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
