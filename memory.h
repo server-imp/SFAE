@@ -64,26 +64,25 @@ namespace memory
 		if (!address.raw() || buffer.empty())
 			return false;
 
-		auto lpBaseAddress = address.as<LPVOID>();
 		DWORD dwOldProtection{};
-		if (!VirtualProtect(lpBaseAddress, buffer.size(), PAGE_EXECUTE_READWRITE, &dwOldProtection))
+		if (!VirtualProtect(address.raw(), buffer.size(), PAGE_EXECUTE_READWRITE, &dwOldProtection))
 			return false;
 
-		if (memcpy_s(lpBaseAddress, buffer.size(), buffer.data(), buffer.size()))
+		if (memcpy_s(address.raw(), buffer.size(), buffer.data(), buffer.size()))
 		{
-			VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+			VirtualProtect(address.raw(), buffer.size(), dwOldProtection, &dwOldProtection);
 
 			return false;
 		}
 
-		if (!FlushInstructionCache(GetCurrentProcess(), lpBaseAddress, buffer.size()))
+		if (!FlushInstructionCache(GetCurrentProcess(), address.raw(), buffer.size()))
 		{
-			VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+			VirtualProtect(address.raw(), buffer.size(), dwOldProtection, &dwOldProtection);
 
 			return false;
 		}
 
-		VirtualProtect(lpBaseAddress, buffer.size(), dwOldProtection, &dwOldProtection);
+		VirtualProtect(address.raw(), buffer.size(), dwOldProtection, &dwOldProtection);
 
 		return true;
 	}
