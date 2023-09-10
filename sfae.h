@@ -53,14 +53,6 @@ namespace sfae
 
 		printf_s("Located modCheck at 0x%p\n", pointers::modCheck.as<void*>());
 
-		uint8_t patch[]{
-				0x31, 0xC0,	// xor eax, eax
-				0xC3,		// ret
-				0x90,		// nop
-				0x90,		// nop 
-				0x90 		// nop
-		};
-
 		printf_s("Patching... ");
 		if (!memory::patch(
 			pointers::modCheck, 
