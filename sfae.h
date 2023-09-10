@@ -38,12 +38,12 @@ namespace sfae
 		7FF6980649EC: 74 25                 - je 7FF698064A13
 		7FF6980649EE: 48 8B 05 33 03 10 04  - mov rax,[7FF69C164D28]
 		7FF6980649F5: 48 85 C0              - test rax,rax
-		7FF6980649F8: 74 09                 - je 7FF698064A03
+		7FF6980649F8: 74 09						- je 7FF698064A03
 		7FF6980649FA: F6 80 E6 10 00 00 04  - test byte ptr [rax+000010E6],04
 		7FF698064A01: 75 09                 - jne 7FF698064A0C
 		*/
 
-		if (!pattern::find("Starfield.exe", "40 53 48 83 EC 30 C6 44 24 48", pointers::modCheck))
+		if (!pattern::find("Starfield.exe", "40 ? 48 83 ? 30 C6 44 ? ? 00 48 ? ? ? ? 74 ? 48", pointers::modCheck))
 		{
 			MessageBoxA(0, "Couldn't locate modCheck!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't locate modCheck! Achievement Enabler will not function!\n");
@@ -105,7 +105,7 @@ namespace sfae
 		Starfield.exe+1AE73C3: 74 26                       - je Starfield.exe+1AE73EB
 		*/
 
-		if (!pattern::find("Starfield.exe", "40 53 48 83 EC 20 48 8B 0D ? ? ? ? 4C 8D 05 ? ? ? ? B2 5B C6 05", pointers::everModded))
+		if (!pattern::find("Starfield.exe", "40 ? 48 ? ? 20 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? 5B C6 ? ? ? ? ? 01 E8 ? ? ? ? 65", pointers::everModded))
 		{
 			MessageBoxA(0, "Couldn't locate everModded!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't locate everModded! Achievement Enabler will not function!\n");
@@ -210,7 +210,7 @@ namespace sfae
 		7FF69944D193: E8 9C B5 F9 FD              - call 7FF6973E8734
 		*/
 
-		if (!pattern::find("Starfield.exe", "48 89 5C 24 08 57 48 83 EC 60 48 8B F9 80", pointers::consoleMessage))
+		if (!pattern::find("Starfield.exe", "48 ? ? ? ? ? 48 ? ? 60 48 ? ? 80 ? ? 00 0F 84 ? ? ? ? 48", pointers::consoleMessage))
 		{
 			MessageBoxA(0, "Couldn't locate consoleMessage!\nAchievement Enabler will not function!", "SFAE", 0);
 			printf_s("Couldn't locate consoleMessage! Achievement Enabler will not function!\n");
