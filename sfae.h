@@ -38,7 +38,7 @@ namespace sfae
 		7FF6980649EC: 74 25                 - je 7FF698064A13
 		7FF6980649EE: 48 8B 05 33 03 10 04  - mov rax,[7FF69C164D28]
 		7FF6980649F5: 48 85 C0              - test rax,rax
-		7FF6980649F8: 74 09						- je 7FF698064A03
+		7FF6980649F8: 74 09					- je 7FF698064A03
 		7FF6980649FA: F6 80 E6 10 00 00 04  - test byte ptr [rax+000010E6],04
 		7FF698064A01: 75 09                 - jne 7FF698064A0C
 		*/
