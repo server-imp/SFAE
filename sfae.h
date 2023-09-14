@@ -20,7 +20,7 @@ namespace sfae
     {
         char       modulePath[MAX_PATH];
         const auto moduleHandle = GetModuleHandle(nullptr);
-        GetModuleFileName(moduleHandle, modulePath, MAX_PATH);
+        GetModuleFileNameA(moduleHandle, modulePath, MAX_PATH);
         const auto moduleName = std::string(modulePath);
         return moduleName.substr(moduleName.find_last_of("/\\") + 1);
     }
