@@ -15,6 +15,18 @@ namespace sfae
         memory::handle consoleMessage;
     }
 
+    // Will return the name of the executing assembly like "Starfield.exe" or "StarfieldOther.exe" in the case of people using `[Loader] RuntimeName=StarfieldOther.exe` in "SFSi.ini".
+    std::string GetExeFilename()
+    {
+        char       modulePath[MAX_PATH];
+        const auto moduleHandle = GetModuleHandle(nullptr);
+        GetModuleFileName(moduleHandle, modulePath, MAX_PATH);
+        const auto moduleName = std::string(modulePath);
+        return moduleName.substr(moduleName.find_last_of("/\\") + 1);
+    }
+
+    std::string moduleName = GetExeFilename();
+
     bool modCheck()
     {
         /*
@@ -43,7 +55,7 @@ namespace sfae
         7FF698064A01: 75 09                 - jne 7FF698064A0C
         */
 
-        if (!pattern::find("Starfield.exe", "40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48", pointers::modCheck))
+        if (!pattern::find(moduleName.c_str(), "40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48", pointers::modCheck))
         {
             MessageBoxA(0, "Couldn't locate modCheck!\nAchievement Enabler will not function!", "SFAE", 0);
             printf_s("Couldn't locate modCheck! Achievement Enabler will not function!\n");
@@ -106,7 +118,7 @@ namespace sfae
         Starfield.exe+1AE73C3: 74 26                       - je Starfield.exe+1AE73EB
         */
 
-        if (!pattern::find("Starfield.exe", "40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", pointers::everModded))
+        if (!pattern::find(moduleName.c_str(), "40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", pointers::everModded))
         {
             MessageBoxA(0, "Couldn't locate everModded!\nAchievement Enabler will not function!", "SFAE", 0);
             printf_s("Couldn't locate everModded! Achievement Enabler will not function!\n");
@@ -148,7 +160,7 @@ namespace sfae
         7FF698F79FB5: 8B 05 29 B6 55 03     - mov eax,[7FF69C4D55E4]
         */
 
-        if (!pattern::find("Starfield.exe", "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF", pointers::modsMessage))
+        if (!pattern::find(moduleName.c_str(), "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF", pointers::modsMessage))
         {
             MessageBoxA(0, "Couldn't locate modsMessage!\nAchievement Enabler will not function!", "SFAE", 0);
             printf_s("Couldn't locate modsMessage! Achievement Enabler will not function!\n");
@@ -211,7 +223,7 @@ namespace sfae
         7FF69944D193: E8 9C B5 F9 FD              - call 7FF6973E8734
         */
 
-        if (!pattern::find("Starfield.exe", "48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00", pointers::consoleMessage))
+        if (!pattern::find(moduleName.c_str(), "48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00", pointers::consoleMessage))
         {
             MessageBoxA(0, "Couldn't locate consoleMessage!\nAchievement Enabler will not function!", "SFAE", 0);
             printf_s("Couldn't locate consoleMessage! Achievement Enabler will not function!\n");
