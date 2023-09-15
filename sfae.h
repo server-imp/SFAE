@@ -259,6 +259,15 @@ namespace sfae
 
     void run()
     {
+        
+        memory::handle ptr{}; //                      "SFSE will probably not function correctly" <-- String present within sfse_loader.exe
+        if (memory::pattern::find(moduleName.c_str(), "53 46 53 45 20 77 69 6C 6C 20 70 72 6F 62 61 62 6C 79 20 6E 6F 74 20 66 75 6E 63 74 69 6F 6E 20 63 6F 72 72 65 63 74 6C 79", ptr))
+        {
+            // If this string is present in the active module, it means we're loaded in sfse_loader.exe and not Starfield.exe
+            // So we end execution of SFAE at this point.
+            return;
+        }
+
         // if a file named "sfae.console"/"sfae.console.txt" exists within the starfield directory, show the console window
         std::filesystem::path currentDirectory = std::filesystem::current_path();
         std::filesystem::path filePath = currentDirectory / "sfae.console";
