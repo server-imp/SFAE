@@ -18,7 +18,10 @@ using namespace std::chrono_literals;
 
 inline void log(const char* fmt, ...)
 {
-    printf(std::format("[SFAE] {:%T}\t", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now())).c_str());
+    auto time_since_epoch = std::time(nullptr);
+    auto local_time = std::localtime(&time_since_epoch);
+
+    printf("[SFAE] %02d:%02d:%02d\t", local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
 
     va_list args;
     va_start(args, fmt);
