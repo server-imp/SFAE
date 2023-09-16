@@ -12,7 +12,8 @@ You can enable a console window if you want - simply create a file named "sfae.c
 
 This console window doesn't offer much but may be useful for debugging or just making sure it works
 
-![image](https://github.com/server-imp/SFAE/assets/66805612/1f59d613-b95c-4201-8ebc-a1376724ab87)
+![image](https://github.com/server-imp/SFAE/assets/66805612/b94cc244-bb49-4d9d-b50f-7bc2ceb5f0bd)
+
 
 
 ## Installation
