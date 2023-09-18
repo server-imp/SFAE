@@ -3,6 +3,8 @@
 #include "pch.h"
 #include "memory.h"
 
+#define SFAE_VERSION "1.3.3"
+
 using namespace memory;
 
 namespace sfae
@@ -22,13 +24,13 @@ namespace sfae
                 std::filesystem::exists(currentDirectory / "sfae.console") || 
                 std::filesystem::exists(currentDirectory / "sfae.console.txt")
             ) &&
-            AllocConsole())
+            AllocConsole() &&
+            freopen("CONOUT$", "w", stdout))
         {
-            if (freopen("CONOUT$", "w", stdout))
-            {
-                SetConsoleTitle(L"Starfield Achievement Enabler");
-                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-            }
+            char buf[128]{};
+            sprintf_s(buf, 128, "Starfield Achievement Enabler %s", SFAE_VERSION);
+            SetConsoleTitleA(buf);
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
         }
     }
 
@@ -45,6 +47,7 @@ namespace sfae
         // load console if needed
         loadConsole();
 
+        log("Version %s Loaded in %s", SFAE_VERSION, memory::getCurrentModuleFileName().c_str());
         log("Initializing...");
 
         // create code patches
@@ -106,7 +109,9 @@ namespace sfae
             sprintf_s(
                 buf,
                 512,
-                "At least one signature has not been found!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\nEver Modded:\t%s\n\nAchievement Enabler will NOT work fully!",
+                "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one signature has not been found!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\nEver Modded:\t%s\n\nAchievement Enabler will NOT work fully!",
+                SFAE_VERSION,
+                memory::getCurrentModuleFileName().c_str(),
                 modCheck.is_valid() ? "Found" : "Not Found",
                 modsMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
@@ -123,9 +128,10 @@ namespace sfae
         consoleMessage.enable();
 
         // Check if all patches enabled ok
-        if (!modCheck.is_enabled() ||
+        if (!erroredOnce &&
+            (!modCheck.is_enabled() ||
             !modsMessage.is_enabled() ||
-            !consoleMessage.is_enabled())
+            !consoleMessage.is_enabled()))
         {
             if (!erroredOnce)
             {
@@ -133,7 +139,9 @@ namespace sfae
                 sprintf_s(
                     buf,
                     512,
-                    "At least one patch has not succeeded!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\n\nAchievement Enabler will NOT work fully!",
+                    "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one patch has not succeeded!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\n\nAchievement Enabler will NOT work fully!",
+                    SFAE_VERSION,
+                    memory::getCurrentModuleFileName().c_str(),
                     modCheck.is_enabled() ? "Patched" : "Not Patched",
                     modsMessage.is_enabled() ? "Patched" : "Not Patched",
                     consoleMessage.is_enabled() ? "Patched" : "Not Patched"
