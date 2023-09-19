@@ -71,6 +71,7 @@ namespace sfae
             "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF");
 
 #ifdef PatchBackgroundCheck
+
         auto backgroundCheck1 = Patch(
             "Background Check 1",
             {
@@ -80,12 +81,23 @@ namespace sfae
 
         auto backgroundCheck2 = Patch(
             "Background Check 2",
-            {
-                0x8B, // mov
-                0xDD, //
-                0x90  // nop
-            },
-            "0F ? ? 48 ? ? 74 ? 88 ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? C5 ? ? ? C5 ? ? ? E8 ? ? ? ? 80 ? ? ? ? ? 00 74");
+            {},
+            "0F 45 ? 48 ? ? 74 ? 88 ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? C5 ? ? ? C5 ? ? ? E8 ? ? ? ? 80 ? ? ? ? ? 00 74");
+        //         ^ This is the operand we need to add to our patch
+        // 
+        // The operand may change with updates so we get the right one from memory and put it in the patch buffer
+        if (backgroundCheck2.is_valid())
+        {
+            backgroundCheck2.set_buffer(
+                {
+                    0x8B, // mov
+                    *(backgroundCheck2.ptr().as<uint8_t*>() + 2), // op 1 / op 2
+                    0x90  // nop
+                },
+                true
+            );
+        }
+
 #endif
 
         char message[36];

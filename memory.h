@@ -79,8 +79,9 @@ namespace memory
     /// <param name="address"></param>
     /// <param name="buffer"></param>
     /// <param name="originalBuffer">If this is not null, it will copy the original bytes here</param>
+    /// <param name="flushInstructionCache"></param>
     /// <returns>True if succeeded</returns>
-    bool patch(memory::handle address, uint8_t* buffer, size_t length, std::vector<uint8_t>* originalBuffer = nullptr)
+    bool patch(memory::handle address, uint8_t* buffer, size_t length, std::vector<uint8_t>* originalBuffer = nullptr, bool flushInstructionCache = true)
     {
         if (!address.raw())
         {
@@ -123,7 +124,7 @@ namespace memory
         }
 
         // Flush the instruction cache to make sure it's not executing old instructions
-        if (!FlushInstructionCache(GetCurrentProcess(), address.raw(), length))
+        if (flushInstructionCache && !FlushInstructionCache(GetCurrentProcess(), address.raw(), length))
         {
             VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
 
@@ -144,8 +145,9 @@ namespace memory
     /// <param name="address"></param>
     /// <param name="buffer"></param>
     /// <param name="originalBuffer">If this is not null, it will copy the original bytes here</param>
+    /// <param name="flushInstructionCache"></param>
     /// <returns>True if succeeded</returns>
-    bool patch(memory::handle address, std::vector<uint8_t> buffer, std::vector<uint8_t>* originalBuffer = nullptr)
+    bool patch(memory::handle address, std::vector<uint8_t> buffer, std::vector<uint8_t>* originalBuffer = nullptr, bool flushInstructionCache = true)
     {
         if (buffer.empty())
         {
@@ -154,7 +156,7 @@ namespace memory
             return false;
         }
 
-        return patch(address, buffer.data(), buffer.size(), originalBuffer);
+        return patch(address, buffer.data(), buffer.size(), originalBuffer, flushInstructionCache);
     }
 
     namespace pattern
@@ -348,31 +350,63 @@ namespace memory
             return enabled;
         }
 
-        bool enable()
+        memory::handle ptr() const
+        {
+            return this->pointer;
+        }
+
+        bool enable(bool suppressLogging = false)
         {
             if (enabled || !valid || !memory::patch(pointer, buffer, &originalBuffer))
             {
-                err("Couldn't Patch \"%s\"", name);
+                if (!suppressLogging)
+                    err("Couldn't Patch \"%s\"", name);
                 return false;
             }
 
-            info("Patched \"%s\"", name);
+            if (!suppressLogging)
+                info("Patched \"%s\"", name);
 
             enabled ^= true;
             return true;
         }
 
-        bool disable()
+        bool disable(bool suppressLogging = false)
         {
             if (!enabled || !valid || !memory::patch(pointer, originalBuffer))
             {
-                err("Couldn't Unpatch \"%s\"", name);
+                if (!suppressLogging)
+                    err("Couldn't Unpatch \"%s\"", name);
                 return false;
             }
 
-            info("Unpatched \"%s\"", name);
+            if (!suppressLogging)
+                info("Unpatched \"%s\"", name);
 
             enabled ^= true;
+            return true;
+        }
+
+        bool set_buffer(const std::vector<uint8_t> buffer, bool suppressLogging = false)
+        {
+            this->buffer = buffer;
+
+            if (enabled)
+            {
+                if (!disable(true) || !enable(true))
+                {
+                    if (!suppressLogging)
+                        err("Couldn't update \"%s\" buffer", name);
+
+                    return false;
+                }
+
+                return false;
+            }
+
+            if (!suppressLogging)
+                info("Updated \"%s\" buffer", name);
+
             return true;
         }
     };
@@ -419,12 +453,18 @@ namespace memory
             return enabled;
         }
 
+        memory::handle ptr() const
+        {
+            return this->pointer;
+        }
+
         bool enable(bool suppressLogging = false)
         {
-            if (enabled || !valid || !memory::patch(pointer, (uint8_t*)text.c_str(), text.length() + 1, &originalBuffer))
+            if (enabled || !valid || !memory::patch(pointer, (uint8_t*)text.c_str(), text.length() + 1, &originalBuffer, false))
             {
                 if (!suppressLogging)
                     err("Couldn't Patch \"%s\"", name);
+
                 return false;
             }
 
@@ -441,6 +481,7 @@ namespace memory
             {
                 if (!suppressLogging)
                     err("Couldn't Unpatch \"%s\"", name);
+
                 return false;
             }
 
