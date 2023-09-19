@@ -14,10 +14,10 @@
 #include <format>
 #include <atomic>
 #include <map>
+
 #pragma comment(lib, "user32.lib")
 
 using namespace std::chrono_literals;
-
-
+namespace fs = std::filesystem;
 
 #endif
