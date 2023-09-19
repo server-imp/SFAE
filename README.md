@@ -20,9 +20,12 @@ This console window doesn't offer much but may be useful for debugging or just m
 
 Simply drop **vcruntime140_1.dll** within the Starfield directory (Same one that has Starfield.exe), that's it!
 
+
 For default install locations:
-Steam: "**C:\Program Files (x86)\Steam\steamapps\common\Starfield**" on a standard Steam install.
-GamePass "**C:\XboxGames\Starfield\Content**" (Support for GamePass is not guaranteed but seems to work for now)
+
+Steam: "**C:\Program Files (x86)\Steam\steamapps\common\Starfield**"
+
+GamePass: "**C:\XboxGames\Starfield\Content**" (Support for GamePass is not guaranteed but seems work)
 
 
 ---
