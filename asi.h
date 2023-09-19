@@ -4,12 +4,16 @@
 #include "pch.h"
 #include "log.h"
 
+// Window title and class used for FindWindow
+// to get hWnd for WndProc hook for reload shortcut
 #define WindowTitle "Starfield"
 #define WindowClass "Starfield"
 
+// Reload key and optional modifier key
 #define RELOAD_KEY VK_F11
 #define RELOAD_MOD VK_LSHIFT // 0 for no modifier key
 
+// Relative directory to load .ASI and .DLL files from
 #define PLUGIN_DIRECTORY "SFAE ASIL";
 
 namespace asi
