@@ -33,6 +33,7 @@ When you open the in-game console for the first time, you will see a message fro
 
 ![Screenshot from 2023-09-19 07-15-37](https://github.com/server-imp/SFAE/assets/66805612/df7f3aaf-59be-48d8-9dee-24098692dbbf)
 
+There is also a logfile within the install directory: sfae.log
 
 # Links
 Find it on Nexus Mods here: https://www.nexusmods.com/starfield/mods/1402
