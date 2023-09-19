@@ -18,12 +18,15 @@ This console window doesn't offer much but may be useful for debugging or just m
 
 ## Installation
 Simply drop **vcruntime140_1.dll** within the Starfield directory (Same one that has Starfield.exe), that's it!
-
-(If you had the previous **dxgi.dll** installed, you need to remove it)
+This would be "**C:\Program Files (x86)\Steam\steamapps\common\Starfield**" on a standard Steam install.
 
 Or
 
 It should also work with any type of .ASI loader
+
+If it is working as intended then you will see this when opening the ingame console for the first time of your game session:
+![Screenshot from 2023-09-19 07-15-37](https://github.com/server-imp/SFAE/assets/66805612/41c97d8c-2327-4244-a0c1-c64c15d7b192)
+
 
 # Links
 Find it on Nexus Mods here: https://www.nexusmods.com/starfield/mods/1402
