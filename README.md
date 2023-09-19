@@ -17,10 +17,13 @@ This console window doesn't offer much but may be useful for debugging or just m
 
 
 ## Installation
+
 Simply drop **vcruntime140_1.dll** within the Starfield directory (Same one that has Starfield.exe), that's it!
 This would be "**C:\Program Files (x86)\Steam\steamapps\common\Starfield**" on a standard Steam install.
 
+---
 When you open the in-game console for the first time, you will see a message from SFAE telling you if it is working or not:
+
 ![Screenshot from 2023-09-19 07-15-37](https://github.com/server-imp/SFAE/assets/66805612/df7f3aaf-59be-48d8-9dee-24098692dbbf)
 
 
