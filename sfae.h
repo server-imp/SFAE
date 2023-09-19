@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "memory.h"
 
-#define SFAE_VERSION "1.3.3"
+#define SFAE_VERSION "1.3.4"
 
 using namespace memory;
 
@@ -75,16 +75,10 @@ namespace sfae
             },
             "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF");
 
-        auto consoleMessage = Patch(
+        auto consoleMessage = StringPatch(
             "Console Message",
-            {
-                0xC3, // ret
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90  // nop
-            },
-            "48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00");
+            "SFAE: Working!",
+            "$UsingConsoleMayDisableAchievements");
 
         // find everModded
         if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
@@ -119,6 +113,7 @@ namespace sfae
             );
 
             erroredOnce = true;
+            consoleMessage.set_text("SFAE: !!! NOT WORKING !!!");
             MessageBoxA(NULL, buf, "SFAE", MB_ICONWARNING);
         }
 
@@ -147,6 +142,7 @@ namespace sfae
                     consoleMessage.is_enabled() ? "Patched" : "Not Patched"
                 );
 
+                consoleMessage.set_text("SFAE: !!! NOT WORKING !!!");
                 MessageBoxA(NULL, buf, "SFAE", MB_ICONWARNING);
             }
         }

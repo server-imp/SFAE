@@ -78,43 +78,81 @@ namespace memory
     /// <param name="buffer"></param>
     /// <param name="originalBuffer">If this is not null, it will copy the original bytes here</param>
     /// <returns>True if succeeded</returns>
-    bool patch(memory::handle address, std::vector<uint8_t> buffer, std::vector<uint8_t>* originalBuffer = nullptr)
+    bool patch(memory::handle address, uint8_t* buffer, size_t length, std::vector<uint8_t>* originalBuffer = nullptr)
     {
-        if (!address.raw() || buffer.empty())
+        if (!address.raw())
+        {
+            log("Patch: Invalid Address");
+
             return false;
+        }
+
+        if (!buffer)
+        {
+            log("Patch: Invalid Buffer");
+
+            return false;
+        }
 
         auto ptr = address.as<uint8_t*>();
 
         // Change the protection of the memory region to allow writing
         DWORD dwOldProtection{};
-        if (!VirtualProtect(ptr, buffer.size(), PAGE_EXECUTE_READWRITE, &dwOldProtection))
+        if (!VirtualProtect(ptr, length, PAGE_EXECUTE_READWRITE, &dwOldProtection))
+        {
+            log("Patch: VirtualProtect Failed");
+
             return false;
+        }
 
         // If originalBuffer is not null, we copy the original bytes before overwriting them
         if (originalBuffer)
-            originalBuffer->assign(ptr, ptr + buffer.size());
+            originalBuffer->assign(ptr, ptr + length);
 
         // Write the new bytes to memory
-        if (memcpy_s(ptr, buffer.size(), buffer.data(), buffer.size()))
+        if (memcpy_s(ptr, length, buffer, length))
         {
             // If the memcpy failed then we restore the original memory protection and return false
-            VirtualProtect(ptr, buffer.size(), dwOldProtection, &dwOldProtection);
+            VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
+
+            log("Patch: memcpy_s Failed");
 
             return false;
         }
 
         // Flush the instruction cache to make sure it's not executing old instructions
-        if (!FlushInstructionCache(GetCurrentProcess(), address.raw(), buffer.size()))
-        { 
-            VirtualProtect(ptr, buffer.size(), dwOldProtection, &dwOldProtection);
+        if (!FlushInstructionCache(GetCurrentProcess(), address.raw(), length))
+        {
+            VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
+
+            log("Patch: FlushInstructionCache Failed");
 
             return false;
         }
 
         // Restore the original memory protection
-        VirtualProtect(ptr, buffer.size(), dwOldProtection, &dwOldProtection);
+        VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
 
         return true;
+    }
+
+    /// <summary>
+    /// Writes a patch in a memory location
+    /// </summary>
+    /// <param name="address"></param>
+    /// <param name="buffer"></param>
+    /// <param name="originalBuffer">If this is not null, it will copy the original bytes here</param>
+    /// <returns>True if succeeded</returns>
+    bool patch(memory::handle address, std::vector<uint8_t> buffer, std::vector<uint8_t>* originalBuffer = nullptr)
+    {
+        if (buffer.empty())
+        {
+            log("Patch: Empty Buffer");
+
+            return false;
+        }
+
+        return patch(address, buffer.data(), buffer.size(), originalBuffer);
     }
 
     namespace pattern
@@ -311,6 +349,87 @@ namespace memory
         bool enable()
         {
             if (enabled || !valid || !memory::patch(pointer, buffer, &originalBuffer))
+            {
+                log("Couldn't Patch \"%s\"!", name);
+                return false;
+            }
+
+            log("Patched \"%s\"!", name);
+
+            enabled ^= true;
+            return true;
+        }
+
+        bool disable()
+        {
+            if (!enabled || !valid || !memory::patch(pointer, originalBuffer))
+            {
+                log("Couldn't Unpatch \"%s\"!", name);
+                return false;
+            }
+
+            log("Unpatched \"%s\"!", name);
+
+            enabled ^= true;
+            return true;
+        }
+    };
+
+    /// <summary>
+    /// Helper class to find strings and replace them
+    /// </summary>
+    class StringPatch
+    {
+    private:
+        const char* name{};
+        memory::handle pointer{};
+
+        const char* text;
+        std::vector<uint8_t> originalBuffer{};
+
+        bool valid{};
+        bool enabled{};
+
+    public:
+        StringPatch(const char* name, const char* text, const char* find, const char* moduleName = nullptr)
+        {
+            this->name = name;
+            this->text = text;
+
+            if (!pattern::find_string(find, &pointer, moduleName))
+            {
+                log("Couldn't Find \"%s\"!", name);
+
+                return;
+            }
+
+            log("Found \"%s\" at %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            valid = true;
+        }
+
+        const bool is_valid() const
+        {
+            return valid;
+        }
+
+        const bool is_enabled() const
+        {
+            return enabled;
+        }
+
+        bool set_text(const char* text)
+        {
+            this->text = text;
+
+            if (enabled && !disable())
+                return false;
+
+            return enable();
+        }
+
+        bool enable()
+        {
+            if (enabled || !valid || !memory::patch(pointer, (uint8_t*)text, strlen(text) + 1, &originalBuffer))
             {
                 log("Couldn't Patch \"%s\"!", name);
                 return false;
