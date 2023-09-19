@@ -1,6 +1,8 @@
 #pragma once
 #ifndef MEMORY
+#define MEMORY
 #include "pch.h"
+#include "log.h"
 
 namespace memory
 {
@@ -82,14 +84,14 @@ namespace memory
     {
         if (!address.raw())
         {
-            log("Patch: Invalid Address");
+            err("Patch: Invalid Address");
 
             return false;
         }
 
         if (!buffer)
         {
-            log("Patch: Invalid Buffer");
+            err("Patch: Invalid Buffer");
 
             return false;
         }
@@ -100,7 +102,7 @@ namespace memory
         DWORD dwOldProtection{};
         if (!VirtualProtect(ptr, length, PAGE_EXECUTE_READWRITE, &dwOldProtection))
         {
-            log("Patch: VirtualProtect Failed");
+            err("Patch: VirtualProtect Failed");
 
             return false;
         }
@@ -115,7 +117,7 @@ namespace memory
             // If the memcpy failed then we restore the original memory protection and return false
             VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
 
-            log("Patch: memcpy_s Failed");
+            err("Patch: memcpy_s Failed");
 
             return false;
         }
@@ -125,7 +127,7 @@ namespace memory
         {
             VirtualProtect(ptr, length, dwOldProtection, &dwOldProtection);
 
-            log("Patch: FlushInstructionCache Failed");
+            err("Patch: FlushInstructionCache Failed");
 
             return false;
         }
@@ -147,7 +149,7 @@ namespace memory
     {
         if (buffer.empty())
         {
-            log("Patch: Empty Buffer");
+            err("Patch: Empty Buffer");
 
             return false;
         }
@@ -327,12 +329,12 @@ namespace memory
 
             if (!pattern::find(pattern, &pointer, moduleName))
             {
-                log("Couldn't Find \"%s\"!", name);
+                err("Couldn't Find \"%s\"", name);
 
                 return;
             }
 
-            log("Found \"%s\" at %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            info("Found \"%s\" -> %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
             valid = true;
         }
 
@@ -350,11 +352,11 @@ namespace memory
         {
             if (enabled || !valid || !memory::patch(pointer, buffer, &originalBuffer))
             {
-                log("Couldn't Patch \"%s\"!", name);
+                err("Couldn't Patch \"%s\"", name);
                 return false;
             }
 
-            log("Patched \"%s\"!", name);
+            info("Patched \"%s\"", name);
 
             enabled ^= true;
             return true;
@@ -364,11 +366,11 @@ namespace memory
         {
             if (!enabled || !valid || !memory::patch(pointer, originalBuffer))
             {
-                log("Couldn't Unpatch \"%s\"!", name);
+                err("Couldn't Unpatch \"%s\"", name);
                 return false;
             }
 
-            log("Unpatched \"%s\"!", name);
+            info("Unpatched \"%s\"", name);
 
             enabled ^= true;
             return true;
@@ -384,7 +386,7 @@ namespace memory
         const char* name{};
         memory::handle pointer{};
 
-        const char* text;
+        std::string text;
         std::vector<uint8_t> originalBuffer{};
 
         bool valid{};
@@ -398,12 +400,12 @@ namespace memory
 
             if (!pattern::find_string(find, &pointer, moduleName))
             {
-                log("Couldn't Find \"%s\"!", name);
+                err("Couldn't Find \"%s\"", name);
 
                 return;
             }
 
-            log("Found \"%s\" at %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            info("Found \"%s\" -> %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
             valid = true;
         }
 
@@ -417,41 +419,60 @@ namespace memory
             return enabled;
         }
 
-        bool set_text(const char* text)
+        bool enable(bool suppressLogging = false)
         {
-            this->text = text;
-
-            if (enabled && !disable())
-                return false;
-
-            return enable();
-        }
-
-        bool enable()
-        {
-            if (enabled || !valid || !memory::patch(pointer, (uint8_t*)text, strlen(text) + 1, &originalBuffer))
+            if (enabled || !valid || !memory::patch(pointer, (uint8_t*)text.c_str(), text.length() + 1, &originalBuffer))
             {
-                log("Couldn't Patch \"%s\"!", name);
+                if (!suppressLogging)
+                    err("Couldn't Patch \"%s\"", name);
                 return false;
             }
 
-            log("Patched \"%s\"!", name);
+            if (!suppressLogging)
+                info("Patched \"%s\"", name);
 
             enabled ^= true;
             return true;
         }
 
-        bool disable()
+        bool disable(bool suppressLogging = false)
         {
-            if (!enabled || !valid || !memory::patch(pointer, originalBuffer))
+            if (!enabled || !valid || !memory::patch(pointer, (uint8_t*)originalBuffer.data(), originalBuffer.size()))
             {
-                log("Couldn't Unpatch \"%s\"!", name);
+                if (!suppressLogging)
+                    err("Couldn't Unpatch \"%s\"", name);
                 return false;
             }
 
-            log("Unpatched \"%s\"!", name);
+            if (!suppressLogging)
+                info("Unpatched \"%s\"", name);
 
             enabled ^= true;
+            return true;
+        }
+
+        bool set_text(const char* fmt, ...)
+        {
+            va_list args;
+            va_start(args, fmt);
+            char buffer[512]{};
+            vsprintf_s(buffer, fmt, args);
+            va_end(args);
+
+            this->text = buffer;
+
+            if (enabled)
+            {
+                if (!disable(true) || !enable(true))
+                {
+                    err("Couldn't update \"%s\" text", name);
+                    return false;
+                }
+
+                return false;
+            }                     
+
+            info("Updated \"%s\" text [%s]", name, text.c_str());
             return true;
         }
     };

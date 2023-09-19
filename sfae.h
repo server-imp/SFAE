@@ -1,9 +1,9 @@
 #pragma once
 #ifndef sfae
 #include "pch.h"
-#include "memory.h"
+#include "log.h"
 
-#define SFAE_VERSION "1.3.4"
+#define SFAE_VERSION "1.3.5"
 
 using namespace memory;
 
@@ -34,21 +34,13 @@ namespace sfae
         }
     }
 
-    void run()
+    void start()
     {   
-        // this string is present within Starfield.exe
-        if (!pattern::find_string("$CannotTravelToAnUnknownBody"))
-        {
-            // if this string is not present within the main module then we must not be loaded in Starfield.exe
-            // so we end execution of SFAE here
-            return;
-        }
-
         // load console if needed
         loadConsole();
 
-        log("Version %s Loaded in %s", SFAE_VERSION, memory::getCurrentModuleFileName().c_str());
-        log("Initializing...");
+        info("Version %s Loaded in %s", SFAE_VERSION, memory::getCurrentModuleFileName().c_str());
+        info("Initializing..");
 
         // create code patches
         auto modCheck = Patch(
@@ -75,21 +67,23 @@ namespace sfae
             },
             "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF");
 
+        char message[36]{};
+        sprintf_s(message, 36, "SFAE %s: Working", SFAE_VERSION);
         auto consoleMessage = StringPatch(
             "Console Message",
-            "SFAE: Working!",
+            message,
             "$UsingConsoleMayDisableAchievements");
 
         // find everModded
         if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
         {
-            log("Couldn't Find \"Ever Modded\"!");
+            err("Couldn't Find \"Ever Modded\"");
         }
         else
         {
             pointers::everModded = pointers::everModded.add(24).rip().add(1);
 
-            log("Found \"Ever Modded\" at %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
         }
 
         // Check if all patches and everModded are valid
@@ -103,7 +97,7 @@ namespace sfae
             sprintf_s(
                 buf,
                 512,
-                "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one signature has not been found!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\nEver Modded:\t%s\n\nAchievement Enabler will NOT work fully!",
+                "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one signature has not been found\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\nEver Modded:\t%s\n\nAchievement Enabler will NOT work fully!",
                 SFAE_VERSION,
                 memory::getCurrentModuleFileName().c_str(),
                 modCheck.is_valid() ? "Found" : "Not Found",
@@ -113,7 +107,9 @@ namespace sfae
             );
 
             erroredOnce = true;
-            consoleMessage.set_text("SFAE: !!! NOT WORKING !!!");
+
+            consoleMessage.set_text("SFAE %s: !!! NOT WORKING !!!", SFAE_VERSION);
+
             MessageBoxA(NULL, buf, "SFAE", MB_ICONWARNING);
         }
 
@@ -128,31 +124,33 @@ namespace sfae
             !modsMessage.is_enabled() ||
             !consoleMessage.is_enabled()))
         {
-            if (!erroredOnce)
-            {
-                char buf[512]{};
-                sprintf_s(
-                    buf,
-                    512,
-                    "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one patch has not succeeded!\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\n\nAchievement Enabler will NOT work fully!",
-                    SFAE_VERSION,
-                    memory::getCurrentModuleFileName().c_str(),
-                    modCheck.is_enabled() ? "Patched" : "Not Patched",
-                    modsMessage.is_enabled() ? "Patched" : "Not Patched",
-                    consoleMessage.is_enabled() ? "Patched" : "Not Patched"
-                );
+            char buf[512]{};
+            sprintf_s(
+                buf,
+                512,
+                "SFAE Version:\t%s\nMain Module:\t%s\n\nAt least one patch has failed\n\nMod Check:\t%s\nMods Message:\t%s\nConsole Message:\t%s\n\nAchievement Enabler will NOT work fully!",
+                SFAE_VERSION,
+                memory::getCurrentModuleFileName().c_str(),
+                modCheck.is_enabled() ? "Patched" : "Not Patched",
+                modsMessage.is_enabled() ? "Patched" : "Not Patched",
+                consoleMessage.is_enabled() ? "Patched" : "Not Patched"
+            );
 
-                consoleMessage.set_text("SFAE: !!! NOT WORKING !!!");
-                MessageBoxA(NULL, buf, "SFAE", MB_ICONWARNING);
+            if (consoleMessage.is_enabled())
+            {
+                consoleMessage.set_text("SFAE %s: !!! NOT WORKING !!!", SFAE_VERSION);
             }
+
+            MessageBoxA(NULL, buf, "SFAE", MB_ICONWARNING);
         }
 
         // do not go into the loop if we did not find "Ever Modded"
         if (pointers::everModded.raw())
         {
-            log("Monitoring \"Ever Modded\"!");
             // enter an infinite loop to monitor everModded for the duration of game session
             // should run about 200 times per second
+
+            info("Monitoring \"Ever Modded\"");
             CreateThread(nullptr, 0, [](PVOID) -> DWORD
                 {
                     auto ptr = pointers::everModded.as<uint8_t*>();
@@ -164,7 +162,7 @@ namespace sfae
                         {
                             *ptr = 0;
 
-                            log("Blocked \"Ever Modded\" from changing!");
+                            info("Blocked \"Ever Modded\" Change");
                         }
 
                         std::this_thread::sleep_for(5ms);
@@ -172,7 +170,7 @@ namespace sfae
                 }, 0, 0, 0);
         }
 
-        log("Done Initializing!");
+        info("Done Initializing");
     }
 }
 
