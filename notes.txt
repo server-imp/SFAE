@@ -25,6 +25,7 @@ Mod Check:
 
     40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48
 
+
 Mods Message:
     7FF698F79F5B: E9 98 00 00 00        - jmp 7FF698F79FF8
     7FF698F79F60: A8 08                 - test al,08
@@ -107,3 +108,59 @@ Ever Modded:
     Starfield.exe+1AE73C3: 74 26                       - je Starfield.exe+1AE73EB
 
     40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75
+
+
+Background Check 1:
+    Starfield_original.exe+23F72D2: 0F 84 8F 00 00 00     - je Starfield_original.exe+23F7367
+    Starfield_original.exe+23F72D8: 48 8B 0D 61 F1 50 03  - mov rcx,[Starfield_original.exe+5906440]
+    Starfield_original.exe+23F72DF: 48 85 C9              - test rcx,rcx
+    Starfield_original.exe+23F72E2: 74 09                 - je Starfield_original.exe+23F72ED
+    Starfield_original.exe+23F72E4: E8 FF 0B EA FE        - call Starfield_original.exe+1297EE8
+    Starfield_original.exe+23F72E9: 84 C0                 - test al,al
+    Starfield_original.exe+23F72EB: 75 7A                 - jne Starfield_original.exe+23F7367
+    Starfield_original.exe+23F72ED: 48 39 35 7C EC 19 03  - cmp [Starfield_original.exe+5595F70],rsi
+    Starfield_original.exe+23F72F4: 75 71                 - jne Starfield_original.exe+23F7367
+    Starfield_original.exe+23F72F6: 40 38 35 DB E8 19 03  - cmp [Starfield_original.exe+5595BD8],sil
+    // ---------- INJECTING HERE ----------
+    Starfield_original.exe+23F72FD: 75 68                 - jne Starfield_original.exe+23F7367
+    // ---------- DONE INJECTING  ----------
+    Starfield_original.exe+23F72FF: 40 84 FF              - test dil,dil
+    Starfield_original.exe+23F7302: 75 33                 - jne Starfield_original.exe+23F7337
+    Starfield_original.exe+23F7304: 33 C9                 - xor ecx,ecx
+    Starfield_original.exe+23F7306: 40 B7 01              - mov dil,01
+    Starfield_original.exe+23F7309: E8 32 DC 45 FE        - call Starfield_original.exe+854F40
+    Starfield_original.exe+23F730E: 48 8B 1D C3 D8 50 03  - mov rbx,[Starfield_original.exe+5904BD8]
+    Starfield_original.exe+23F7315: 48 85 DB              - test rbx,rbx
+    Starfield_original.exe+23F7318: 74 1D                 - je Starfield_original.exe+23F7337
+    Starfield_original.exe+23F731A: 48 8D 8B 00 04 00 00  - lea rcx,[rbx+00000400]
+    Starfield_original.exe+23F7321: E8 EA C0 E4 00        - call Starfield_original.exe+3243410
+
+    75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8
+
+
+Background Check 2:
+    Starfield_original.exe+23F7BA7: CC                    - int 3 
+    Starfield_original.exe+23F7BA8: 48 89 5C 24 08        - mov [rsp+08],rbx
+    Starfield_original.exe+23F7BAD: 48 89 6C 24 10        - mov [rsp+10],rbp
+    Starfield_original.exe+23F7BB2: 57                    - push rdi
+    Starfield_original.exe+23F7BB3: 48 83 EC 20           - sub rsp,20
+    Starfield_original.exe+23F7BB7: 80 3D 1A E0 19 03 00  - cmp byte ptr [Starfield_original.exe+5595BD8],00
+    Starfield_original.exe+23F7BBE: BD 01 00 00 00        - mov ebp,00000001
+    Starfield_original.exe+23F7BC3: 48 8B 05 DE 66 2F 03  - mov rax,[Starfield_original.exe+56EE2A8]
+    Starfield_original.exe+23F7BCA: 48 8B 3D 7F E8 50 03  - mov rdi,[Starfield_original.exe+5906450]
+    Starfield_original.exe+23F7BD1: 0F B6 DA              - movzx ebx,dl
+    // ---------- INJECTING HERE ----------
+    Starfield_original.exe+23F7BD4: 0F 45 DD              - cmovne ebx,ebp
+    // ---------- DONE INJECTING  ----------
+    Starfield_original.exe+23F7BD7: 48 85 C0              - test rax,rax
+    Starfield_original.exe+23F7BDA: 74 1F                 - je Starfield_original.exe+23F7BFB
+    Starfield_original.exe+23F7BDC: 88 98 85 00 00 00     - mov [rax+00000085],bl
+    Starfield_original.exe+23F7BE2: 48 8B 0D BF 66 2F 03  - mov rcx,[Starfield_original.exe+56EE2A8]
+    Starfield_original.exe+23F7BE9: E8 72 A7 89 00        - call Starfield_original.exe+2C92360
+    Starfield_original.exe+23F7BEE: C5 F0 57 C9           - vxorps xmm1,xmm1,xmm1
+    Starfield_original.exe+23F7BF2: C5 F8 57 C0           - vxorps xmm0,xmm0,xmm0
+    Starfield_original.exe+23F7BF6: E8 65 60 8B 00        - call Starfield_original.exe+2CADC60
+    Starfield_original.exe+23F7BFB: 80 3D F6 DF 19 03 00  - cmp byte ptr [Starfield_original.exe+5595BF8],00
+    Starfield_original.exe+23F7C02: 74 58                 - je Starfield_original.exe+23F7C5C
+
+    0F ? ? 48 ? ? 74 ? 88 ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? C5 ? ? ? C5 ? ? ? E8 ? ? ? ? 80 ? ? ? ? ? 00 74

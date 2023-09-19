@@ -5,6 +5,9 @@
 
 #define SFAE_VERSION "1.3.5"
 
+// Prevent the game from pausing/freezing when tabbed out
+#define PatchBackgroundCheck
+
 using namespace memory;
 
 namespace sfae
@@ -67,6 +70,24 @@ namespace sfae
             },
             "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF");
 
+#ifdef PatchBackgroundCheck
+        auto backgroundCheck1 = Patch(
+            "Background Check 1",
+            {
+                0xEB, // jne -> jmp
+            },
+            "75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8");
+
+        auto backgroundCheck2 = Patch(
+            "Background Check 2",
+            {
+                0x8B, // mov
+                0xDD, //
+                0x90  // nop
+            },
+            "0F ? ? 48 ? ? 74 ? 88 ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? C5 ? ? ? C5 ? ? ? E8 ? ? ? ? 80 ? ? ? ? ? 00 74");
+#endif
+
         char message[36];
         sprintf_s(message, 36, "SFAE %s: Working", SFAE_VERSION);
         auto consoleMessage = StringPatch(
@@ -117,6 +138,11 @@ namespace sfae
         modCheck.enable();
         modsMessage.enable();
         consoleMessage.enable();
+
+#ifdef PatchBackgroundCheck
+        backgroundCheck1.enable();
+        backgroundCheck2.enable();
+#endif
 
         // Check if all patches enabled ok
         if (!erroredOnce &&
