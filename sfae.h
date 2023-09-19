@@ -27,7 +27,7 @@ namespace sfae
             AllocConsole() &&
             freopen("CONOUT$", "w", stdout))
         {
-            char buf[128]{};
+            char buf[128];
             sprintf_s(buf, 128, "Starfield Achievement Enabler %s", SFAE_VERSION);
             SetConsoleTitleA(buf);
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
@@ -67,7 +67,7 @@ namespace sfae
             },
             "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF");
 
-        char message[36]{};
+        char message[36];
         sprintf_s(message, 36, "SFAE %s: Working", SFAE_VERSION);
         auto consoleMessage = StringPatch(
             "Console Message",
@@ -93,7 +93,7 @@ namespace sfae
             !consoleMessage.is_valid() ||
             !pointers::everModded.raw())
         {
-            char buf[512]{};
+            char buf[512];
             sprintf_s(
                 buf,
                 512,
@@ -124,7 +124,7 @@ namespace sfae
             !modsMessage.is_enabled() ||
             !consoleMessage.is_enabled()))
         {
-            char buf[512]{};
+            char buf[512];
             sprintf_s(
                 buf,
                 512,

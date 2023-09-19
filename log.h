@@ -8,7 +8,7 @@
 
 namespace logging
 {
-    static inline FILE* logfile{};
+    static inline FILE* logfile;
 
     void print(bool newLine, const char* tag, const char* fmt, ...)
     {

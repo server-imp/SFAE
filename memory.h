@@ -66,7 +66,7 @@ namespace memory
     /// </summary>
     std::string getCurrentModuleFileName()
     {
-        char buffer[256]{};
+        char buffer[256];
         if (!GetModuleBaseNameA(GetCurrentProcess(), GetModuleHandle(0), buffer, 256))
             return "?";
 
@@ -99,7 +99,7 @@ namespace memory
         auto ptr = address.as<uint8_t*>();
 
         // Change the protection of the memory region to allow writing
-        DWORD dwOldProtection{};
+        DWORD dwOldProtection;
         if (!VirtualProtect(ptr, length, PAGE_EXECUTE_READWRITE, &dwOldProtection))
         {
             err("Patch: VirtualProtect Failed");
@@ -165,8 +165,8 @@ namespace memory
         /// <returns>A pair of vectors with the pattern and its mask</returns>
         std::pair<std::vector<uint8_t>, std::vector<uint8_t>> parse_ida(const char* pattern)
         {
-            std::vector<uint8_t> bytes{};
-            std::vector<uint8_t> mask{};
+            std::vector<uint8_t> bytes;
+            std::vector<uint8_t> mask;
 
             if (!pattern)
                 return { {},{} };
@@ -215,7 +215,7 @@ namespace memory
             if (!hModule)
                 return false;
 
-            MODULEINFO modInfo{};
+            MODULEINFO modInfo;
             if (!GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO)))
                 return false;
 
@@ -272,7 +272,7 @@ namespace memory
             if (!hModule)
                 return false;
 
-            MODULEINFO modInfo{};
+            MODULEINFO modInfo;
             if (!GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO)))
                 return false;
 
@@ -312,14 +312,14 @@ namespace memory
     class Patch
     {
     private:
-        const char* name{};
-        memory::handle pointer{};
+        const char* name;
+        memory::handle pointer;
 
-        std::vector<uint8_t> buffer{};
-        std::vector<uint8_t> originalBuffer{};
+        std::vector<uint8_t> buffer;
+        std::vector<uint8_t> originalBuffer;
 
-        bool valid{};
-        bool enabled{};
+        bool valid;
+        bool enabled;
 
     public:
         Patch(const char* name, std::vector<uint8_t> buffer, const char* pattern, const char* moduleName = nullptr)
@@ -383,14 +383,14 @@ namespace memory
     class StringPatch
     {
     private:
-        const char* name{};
-        memory::handle pointer{};
+        const char* name;
+        memory::handle pointer;
 
         std::string text;
-        std::vector<uint8_t> originalBuffer{};
+        std::vector<uint8_t> originalBuffer;
 
-        bool valid{};
-        bool enabled{};
+        bool valid;
+        bool enabled;
 
     public:
         StringPatch(const char* name, const char* text, const char* find, const char* moduleName = nullptr)
@@ -455,7 +455,7 @@ namespace memory
         {
             va_list args;
             va_start(args, fmt);
-            char buffer[512]{};
+            char buffer[512];
             vsprintf_s(buffer, fmt, args);
             va_end(args);
 

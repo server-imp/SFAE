@@ -20,8 +20,8 @@ namespace asi
 {
     std::atomic_bool want_reload = false;
 
-    fs::path plugin_directory{};
-    std::vector<std::pair<std::string, HMODULE>> plugins{};
+    fs::path plugin_directory;
+    std::vector<std::pair<std::string, HMODULE>> plugins;
 
     bool validate_directory()
     {
@@ -36,7 +36,7 @@ namespace asi
 
     bool is_module_loaded(HMODULE hModule)
     {
-        MODULEINFO info{};
+        MODULEINFO info;
         return GetModuleInformation(GetCurrentProcess(), hModule, &info, sizeof(info));
     }
 
@@ -99,7 +99,7 @@ namespace asi
         }
     }
 
-    WNDPROC orgWndProc{};
+    WNDPROC orgWndProc;
     // WndProc Hook
     // We read input here for the plugin reload hotkey
     LRESULT __stdcall WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
