@@ -150,8 +150,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="asi.h" />
+    <ClInclude Include="cfg.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="memory.h" />
+    <ClInclude Include="util.h" />
     <ClInclude Include="sfae.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

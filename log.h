@@ -10,8 +10,10 @@ namespace logging
 {
     static inline FILE* logfile;
 
-    void print(bool newLine, const char* tag, const char* fmt, ...)
+    void print(bool newLine, const char* tag, const std::string fmt, ...)
     {
+        auto _fmt = fmt.c_str();
+
         if (!logfile)
             logfile = fopen(LOG_FILE, "w+");
 
@@ -22,10 +24,10 @@ namespace logging
         fprintf(logfile, "[%s] [%s] %02d:%02d:%02d ", HEADER, tag, local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
 
         va_list args;
-        va_start(args, fmt);
+        va_start(args, _fmt);
 
-        vprintf(fmt, args);
-        vfprintf(logfile, fmt, args);
+        vprintf(_fmt, args);
+        vfprintf(logfile, _fmt, args);
 
         va_end(args);
 
@@ -39,16 +41,18 @@ namespace logging
         fflush(logfile);
     }
 
-    void print_raw(const char* fmt, ...)
+    void print_raw(const std::string fmt, ...)
     {
+        auto _fmt = fmt.c_str();
+
         if (!logfile)
             logfile = fopen(LOG_FILE, "w+");
 
         va_list args;
-        va_start(args, fmt);
+        va_start(args, _fmt);
 
-        vprintf(fmt, args);
-        vfprintf(logfile, fmt, args);
+        vprintf(_fmt, args);
+        vfprintf(logfile, _fmt, args);
 
         va_end(args);
 

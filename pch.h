@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <psapi.h>
 #include <stdio.h>
+#include <fstream>
 #include <string>
 #include <thread>
 #include <vector>

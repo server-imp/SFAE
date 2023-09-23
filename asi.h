@@ -9,15 +9,12 @@
 #define WindowTitle "Starfield"
 #define WindowClass "Starfield"
 
-// Reload key and optional modifier key
-#define RELOAD_KEY VK_F11
-#define RELOAD_MOD VK_LSHIFT // 0 for no modifier key
-
-// Relative directory to load .ASI and .DLL files from
-#define PLUGIN_DIRECTORY "SFAE ASIL";
-
 namespace asi
 {
+    uint32_t reloadKey = VK_F11;
+    uint32_t reloadKeyModifier = VK_LSHIFT;
+    std::string relativePath = "SFAE ASIL";
+
     std::atomic_bool want_reload = false;
 
     fs::path plugin_directory;
@@ -107,12 +104,11 @@ namespace asi
         switch (uMsg)
         {
         case WM_KEYDOWN:
-            switch (wParam)
-            {
             // If the key down is our RELOAD_KEY
-            case RELOAD_KEY:
+            if (reloadKey == wParam)
+            {
                 // And if we have a modifier key it must be pressed also
-                if (RELOAD_MOD && !(GetAsyncKeyState(RELOAD_MOD) & 0x8000))
+                if (reloadKeyModifier && !(GetAsyncKeyState(reloadKeyModifier) & 0x8000))
                     break;
 
                 want_reload = true;
@@ -126,13 +122,17 @@ namespace asi
         return CallWindowProcW((WNDPROC)orgWndProc, hWnd, uMsg, wParam, lParam);
     }
 
-    void start()
+    void start(std::string relativePath, uint32_t reloadKey, uint32_t reloadKeyModifier)
     {
+        asi::reloadKey = reloadKey;
+        asi::reloadKeyModifier = reloadKeyModifier;
+        asi::relativePath = relativePath;
+
         CreateThread(
             0, 0, 
             [](PVOID)->DWORD
             {
-                plugin_directory = fs::current_path() / PLUGIN_DIRECTORY;
+                plugin_directory = fs::current_path() / asi::relativePath;
 
                 load_plugins();
 

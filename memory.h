@@ -513,7 +513,7 @@ namespace memory
                 return false;
             }                     
 
-            info("Updated \"%s\" text [%s]", name, text.c_str());
+            info("Updated \"%s\" => \"%s\"", name, text.c_str());
             return true;
         }
     };
