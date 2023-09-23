@@ -101,7 +101,7 @@ namespace util
         if (fs::exists(filePath)) 
         {
             try 
-{
+            {
                 fs::remove(filePath);
                 return true;
             }
