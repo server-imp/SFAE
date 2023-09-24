@@ -233,9 +233,9 @@ public:\
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
-                "Ever Modded:\t%s\n"
                 "Bkgrnd Check 1:\t%s\n"
                 "Bkgrnd Check 2:\t%s\n\n"
+                "Ever Modded:\t%s\n"
                 "Essential functionality:\n"
                 "Mods:\t%s\n"
                 "Console:\t%s";
