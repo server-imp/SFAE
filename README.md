@@ -8,12 +8,9 @@ This does not fix your savefile if it has already been marked as a modded savefi
 Made for and tested with the Steam version
 on Windows 10
 
-You can enable a console window if you want - simply create a file named "sfae.console" within the Starfield directory
-
-This console window doesn't offer much but may be useful for debugging or just making sure it works
+You can enable console and change other settings in sfae.cfg
 
 ![image](https://github.com/server-imp/SFAE/assets/66805612/b94cc244-bb49-4d9d-b50f-7bc2ceb5f0bd)
-
 
 
 ## Installation
@@ -30,6 +27,7 @@ GamePass: "**C:\XboxGames\Starfield\Content**" (Support for GamePass is not guar
 
 ---
 When you open the in-game console for the first time, you will see a message from SFAE telling you if it is working or not:
+If don't want this popup edit the setting in sfae.cfg
 
 ![Screenshot from 2023-09-19 07-15-37](https://github.com/server-imp/SFAE/assets/66805612/df7f3aaf-59be-48d8-9dee-24098692dbbf)
 
