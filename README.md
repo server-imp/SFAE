@@ -24,10 +24,16 @@ Steam: "**C:\Program Files (x86)\Steam\steamapps\common\Starfield**"
 
 GamePass: "**C:\XboxGames\Starfield\Content**" (Support for GamePass is not guaranteed but seems work)
 
+### Configuration
+The first time you run the game with SFAE installed it will generate sfae.cfg within the installation folder
+with settings you may edit to your liking
+
+e.g "**C:\Program Files (x86)\Steam\steamapps\common\Starfield\sfae.cfg**"
 
 ---
-When you open the in-game console for the first time, you will see a message from SFAE telling you if it is working or not:
-If don't want this popup edit the setting in sfae.cfg
+If you have **ShowInGameMessage** set to true in the config, you will see a message the first time you open
+
+the in-game console for the first time, you will see a message from SFAE telling you if it is working or not:
 
 ![Screenshot from 2023-09-19 07-15-37](https://github.com/server-imp/SFAE/assets/66805612/df7f3aaf-59be-48d8-9dee-24098692dbbf)
 
