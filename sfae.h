@@ -8,7 +8,7 @@
 #include "asi.h"
 #include "memory.h"
 
-#define SFAE_VERSION "1.4.0"
+#define SFAE_VERSION "1.4.1"
 
 using namespace memory;
 
@@ -37,7 +37,7 @@ public:\
         cfg::cfg _cfg;
     
         Property(bool, ShowConsole, false, "Show a console window with the log output")
-        Property(bool, ShowInGameMessage, true, "Show a message when you open the in-game console for the first time\nto tell you if SFAE is working or not")
+        Property(bool, ShowInGameMessage, false, "Show a message when you open the in-game console for the first time\nto tell you if SFAE is working or not")
         Property(bool, RunInBackground, true, "Stop the game from pausing when in background")
         Property(bool, EnableASILoader, false, "Enable the ASI loader")
         Property(std::string, ASILoaderRelativePath, "SFAE ASIL", "The relative path to the directory to load .asi/.dll files from")
@@ -185,7 +185,7 @@ public:\
         //         ^ This is the operand we need to add to our patch
         // 
         // The operand may change with updates so we get the right one from memory and put it in the patch buffer
-        if (backgroundCheck2.is_valid())
+        if (backgroundCheck2.is_valid() && settings.getRunInBackground())
         {
             backgroundCheck2.set_buffer(
                 {
@@ -220,8 +220,8 @@ public:\
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
-            !backgroundCheck1.is_valid() ||
-            !backgroundCheck2.is_valid() ||
+            //!backgroundCheck1.is_valid() ||
+            //!backgroundCheck2.is_valid() ||
             !pointers::everModded.raw())
         {
             const char* fmt =
@@ -233,8 +233,8 @@ public:\
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
-                "Bkgrnd Check 1:\t%s\n"
-                "Bkgrnd Check 2:\t%s\n\n"
+                //"Bkgrnd Check 1:\t%s\n"
+                //"Bkgrnd Check 2:\t%s\n\n"
                 "Ever Modded:\t%s\n"
                 "Essential functionality:\n"
                 "Mods:\t%s\n"
@@ -252,15 +252,15 @@ public:\
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
-                backgroundCheck1.is_valid() ? "Found" : "Not Found",
-                backgroundCheck2.is_valid() ? "Found" : "Not Found",
+                //backgroundCheck1.is_valid() ? "Found" : "Not Found",
+                //backgroundCheck2.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
                 (modCheck.is_valid() && modCheck.is_enabled()) ? "Safe to use" : "Not safe to use",
                 pointers::everModded.raw() ? "Safe to use" : "Not safe to use"
             );
         }
 
-        if (settings.getRunInBackground())
+        if (settings.getRunInBackground() && backgroundCheck1.is_valid() && backgroundCheck2.is_valid())
         {
             backgroundCheck1.enable();
             backgroundCheck2.enable();
