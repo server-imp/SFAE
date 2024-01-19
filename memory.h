@@ -324,12 +324,29 @@ namespace memory
         bool enabled;
 
     public:
-        Patch(const char* name, std::vector<uint8_t> buffer, const char* pattern, const char* moduleName = nullptr)
+        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const char* moduleName = nullptr)
         {
             this->name = name;
             this->buffer = buffer;
+            this->valid = false;
+            this->enabled = false;
 
-            if (!pattern::find(pattern, &pointer, moduleName))
+            if (patterns.empty())
+            {
+                err("No pattern supplied for \"%s\"!", name);
+                return;
+            }
+
+            for (auto& pattern : patterns)
+            {
+                if (pattern::find(pattern, &pointer, moduleName))
+                {
+                    valid = true;
+                    break;
+                }
+            }
+
+            if (!valid)
             {
                 err("Couldn't Find \"%s\"", name);
 
@@ -337,7 +354,6 @@ namespace memory
             }
 
             info("Found \"%s\" -> %s+%08X", name, moduleName ? moduleName : getCurrentModuleFileName().c_str(), pointer.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
-            valid = true;
         }
 
         const bool is_valid() const
