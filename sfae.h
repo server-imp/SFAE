@@ -8,7 +8,7 @@
 #include "asi.h"
 #include "memory.h"
 
-#define SFAE_VERSION "1.4.1"
+#define SFAE_VERSION "1.4.2"
 
 using namespace memory;
 
