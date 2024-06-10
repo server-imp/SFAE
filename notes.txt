@@ -28,31 +28,31 @@ Mod Check:
 
 
 Mods Message:
-    7FF698F79F5B: E9 98 00 00 00        - jmp 7FF698F79FF8
-    7FF698F79F60: A8 08                 - test al,08
-    7FF698F79F62: 74 0A                 - je 7FF698F79F6E
-    7FF698F79F64: E8 27 86 00 00        - call 7FF698F82590
-    7FF698F79F69: E9 8A 00 00 00        - jmp 7FF698F79FF8
-    7FF698F79F6E: A8 10                 - test al,10
-    7FF698F79F70: 74 07                 - je 7FF698F79F79
-    7FF698F79F72: E8 C9 84 00 00        - call 7FF698F82440
-    7FF698F79F77: EB 7F                 - jmp 7FF698F79FF8
-    7FF698F79F79: 48 8D 0D C0 A1 1E 03  - lea rcx,[7FF69C164140]
+    Starfield.exe+24DEE27: E9 19 01 00 00        - jmp Starfield.exe+24DEF45
+    Starfield.exe+24DEE2C: F6 03 10              - test byte ptr [rbx],10
+    Starfield.exe+24DEE2F: 74 0A                 - je Starfield.exe+24DEE3B
+    Starfield.exe+24DEE31: E8 7A E5 00 00        - call Starfield.exe+24ED3B0
+    Starfield.exe+24DEE36: E9 0A 01 00 00        - jmp Starfield.exe+24DEF45
+    Starfield.exe+24DEE3B: 40 B7 01              - mov dil,01
+    Starfield.exe+24DEE3E: 48 85 DB              - test rbx,rbx
+    Starfield.exe+24DEE41: 74 46                 - je Starfield.exe+24DEE89
+    Starfield.exe+24DEE43: 40 8A 7B 28           - mov dil,[rbx+28]
+    Starfield.exe+24DEE47: 8B 03                 - mov eax,[rbx]
     // ---------- INJECTING HERE ----------
-    7FF698F79F80: 89 05 5E B6 55 03     - mov [7FF69C4D55E4],eax
+    Starfield.exe+24DEE49: 89 05 25 7C 3A 04     - mov [Starfield.exe+6886A74],eax
     // ---------- DONE INJECTING  ----------
-    7FF698F79F86: E8 81 43 48 FE        - call 7FF6973FE30C
-    7FF698F79F8B: 48 8D 4B 10           - lea rcx,[rbx+10]
-    7FF698F79F8F: E8 78 A1 FF FF        - call 7FF698F7410C
-    7FF698F79F94: 4C 8B C5              - mov r8,rbp
-    7FF698F79F97: 48 8D 0D 42 B5 55 03  - lea rcx,[7FF69C4D54E0]
-    7FF698F79F9E: BA 04 01 00 00        - mov edx,00000104
-    7FF698F79FA3: FF 15 8F F9 AF 01     - call qword ptr [7FF69AA79938]
-    7FF698F79FA9: 89 35 99 05 C7 02     - mov [7FF69BBEA548],esi
-    7FF698F79FAF: 89 3D 23 B5 55 03     - mov [7FF69C4D54D8],edi
-    7FF698F79FB5: 8B 05 29 B6 55 03     - mov eax,[7FF69C4D55E4]
+    Starfield.exe+24DEE4F: B2 01                 - mov dl,01
+    Starfield.exe+24DEE51: 48 8D 0D 48 B4 02 04  - lea rcx,[Starfield.exe+650A2A0]
+    Starfield.exe+24DEE58: E8 63 FB FF FF        - call Starfield.exe+24DE9C0
+    Starfield.exe+24DEE5D: 48 8D 4B 10           - lea rcx,[rbx+10]
+    Starfield.exe+24DEE61: E8 2A 4D FF FF        - call Starfield.exe+24D3B90
+    Starfield.exe+24DEE66: 4D 8B C4              - mov r8,r12
+    Starfield.exe+24DEE69: BA 04 01 00 00        - mov edx,00000104
+    Starfield.exe+24DEE6E: 48 8D 0D 0B 7C 3A 04  - lea rcx,[Starfield.exe+6886A80]
+    Starfield.exe+24DEE75: FF 15 6D 5B CD 01     - call qword ptr [Starfield.exe+41B49E8]
+    Starfield.exe+24DEE7B: 44 89 3D 3E 8C A7 03  - mov [Starfield.exe+5F57AC0],r15d
         
-    89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF
+    89 ? ? ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? 48 ? ? ? E8 ? ? ? ? 4D ? ? ? 04 01 00 00 48 ? ? ? ? ? ? FF
 
 
 Console Message:

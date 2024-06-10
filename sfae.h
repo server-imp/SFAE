@@ -8,7 +8,7 @@
 #include "asi.h"
 #include "memory.h"
 
-#define SFAE_VERSION "1.4.2"
+#define SFAE_VERSION "1.4.3"
 
 using namespace memory;
 
@@ -133,7 +133,7 @@ public:\
                 0x90, // nop
                 0x90  // nop
             },
-            { "89 ? ? ? ? ? E8 ? ? ? ? 48 ? ? 10 E8 ? ? ? ?  4C ? ? 48 ? ? ? ? ? ? ? 04 01 00 00 FF" });
+            { "89 ? ? ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? 48 ? ? ? E8 ? ? ? ? 4D ? ? ? 04 01 00 00 48 ? ? ? ? ? ? FF" });
 
         // this patch is for the message it shows in the console warning popup
         auto consoleMessageText = StringPatch(
