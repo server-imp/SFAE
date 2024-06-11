@@ -1,4 +1,15 @@
-﻿Mod Check:
+﻿To test:
+    Open the steam console:
+        Windows Key + R: steam://open/console
+    Paste this command to reset the lvl 100 achievement:
+        achievement_clear 1716740 50
+    In-game paste this command to become lvl 100:
+        player.setlevel 100
+
+    Repeat achievement_clear command to keep testing
+
+
+Mod Check:
     7FF6980649C1: 45 8B C2              - mov r8d,r10d
     7FF6980649C4: E8 17 7C ED 00        - call 7FF698F3C5E0
     7FF6980649C9: F7 00 00 80 00 00     - test [rax],00008000
