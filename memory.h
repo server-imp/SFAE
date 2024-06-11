@@ -324,7 +324,7 @@ namespace memory
         bool enabled;
 
     public:
-        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const char* moduleName = nullptr)
+        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const size_t offset = 0x00, const char* moduleName = nullptr)
         {
             this->name = name;
             this->buffer = buffer;
@@ -342,6 +342,7 @@ namespace memory
                 if (pattern::find(pattern, &pointer, moduleName))
                 {
                     valid = true;
+                    pointer = pointer.add(offset);
                     break;
                 }
             }

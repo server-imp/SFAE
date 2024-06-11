@@ -4,6 +4,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 #include <filesystem>
+#include <functional>
 #include <windows.h>
 #include <cstdint>
 #include <psapi.h>
@@ -20,5 +21,7 @@
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
+
+#include "MinHook.h"
 
 #endif

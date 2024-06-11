@@ -1,6 +1,3 @@
-# Project archived as of Jun 10 2024
-No longer functioning as of the Creation update, archived as I do not have the time to look into it right now
-
 # SFAE - Starfield Achievement Enabler
 
 Allows you to earn achievements while using mods and console commands

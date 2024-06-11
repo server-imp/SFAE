@@ -7,8 +7,9 @@
 #include "cfg.h"
 #include "asi.h"
 #include "memory.h"
+#include "hook.h"
 
-#define SFAE_VERSION "1.4.3"
+#define SFAE_VERSION "1.4.4"
 
 using namespace memory;
 
@@ -55,6 +56,23 @@ public:\
     namespace pointers
     {
         memory::handle everModded;
+        memory::handle jsonReadBool;
+    }
+
+    /// <summary>
+    /// We hook a function that the game uses to read information about Creation mods and set every mod's "achievement_friendly" value to true
+    /// </summary>
+    inline Hook* hkAchievementFriendly{};
+    inline char __fastcall achievementFriendlyHk(const char** a1, const char* valueName, __int64 resultPtr, char a4, char a5)
+    {
+        auto result = hkAchievementFriendly->original<decltype(&achievementFriendlyHk)>()(a1, valueName, resultPtr, a4, a5);
+
+        if (valueName && strcmp(valueName, "achievement_friendly") == 0 && resultPtr && !*(bool*)resultPtr)
+        {
+            *((bool*)resultPtr) = true;
+        }
+
+        return result;
     }
 
     void loadConsole()
@@ -122,6 +140,18 @@ public:\
                 "? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48" // push
             });
 
+        // this patch is for disabling a check within the function that references string "Achievement %d awarded"
+        auto achievementAwarded = Patch(
+            "Achievement Awarded",
+            {
+                0x90, // nop 
+                0x90  // nop
+            },
+            { 
+                "48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C"
+            },
+            11);
+        
         // this patch is for the message that pops up when you try to load a save while mods are loaded
         auto modsMessage = Patch(
             "Mods Message",
@@ -161,6 +191,27 @@ public:\
             },
             { "48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00" });
 
+        // find Achievement Friendly
+        if (!pattern::find("C6 ? ? ? ? ? 01 4C ? ? ? ? ? ? C6 ? ? ? 00 ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 4C ? ? ? ? ? ? C6 ? ? ? 00 45 ? ?", &pointers::jsonReadBool))
+        {
+            err("Couldn't Find \"Achievement Friendly\"");
+        }
+        else
+        {
+            pointers::jsonReadBool = pointers::jsonReadBool.add(35).rip();
+
+            info("Found \"Achievement Friendly\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::jsonReadBool.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            hkAchievementFriendly = new DetourHook("Achievement Friendly", pointers::jsonReadBool.raw(), achievementFriendlyHk);
+            if (!hkAchievementFriendly->enable())
+            {
+                info("Couldn't hook \"Achievement Friendly\"");
+            }
+            else
+            {
+                info("Hooked \"Achievement Friendly\"");
+            }
+        }
+
         // find everModded
         if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
         {
@@ -181,30 +232,13 @@ public:\
             },
             { "75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8" });
 
-        auto backgroundCheck2 = Patch(
-            "Background Check 2",
-            {},
-            { "0F 45 ? 48 ? ? 74 ? 88 ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? C5 ? ? ? C5 ? ? ? E8 ? ? ? ? 80 ? ? ? ? ? 00 74" });
-        //         ^ This is the operand we need to add to our patch
-        // 
-        // The operand may change with updates so we get the right one from memory and put it in the patch buffer
-        if (backgroundCheck2.is_valid() && settings.getRunInBackground())
-        {
-            backgroundCheck2.set_buffer(
-                {
-                    0x8B, // mov
-                    *(backgroundCheck2.ptr().as<uint8_t*>() + 2), // op 1 / op 2
-                    0x90  // nop
-                },
-                true
-            );
-        }
-
         modsMessageText.enable();
         consoleMessageText.enable();
 
         if (!modCheck.is_valid() || 
             !modCheck.enable() ||
+            !achievementAwarded.is_valid() ||
+            !achievementAwarded.enable() ||
             !pointers::everModded.raw())
         {
             consoleMessageText.set_text("SFAE %s: Not working", SFAE_VERSION);
@@ -219,12 +253,13 @@ public:\
 
         // Check if all patches and everModded are valid
         if (!modCheck.is_valid() ||
+            !achievementAwarded.is_valid() ||
+            !hkAchievementFriendly->enabled() ||
             !modsMessage.is_valid() ||
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
             //!backgroundCheck1.is_valid() ||
-            //!backgroundCheck2.is_valid() ||
             !pointers::everModded.raw())
         {
             const char* fmt =
@@ -232,12 +267,13 @@ public:\
                 "Main Module:\t%s\n\n"
                 "At least one signature has not been found\n\n"
                 "Mod Check:\t%s\n"
+                "Achievement Awarded:\t%s\n"
+                "Achievement Friendly:\t%s\n"
                 "Mods Message:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
                 //"Bkgrnd Check 1:\t%s\n"
-                //"Bkgrnd Check 2:\t%s\n\n"
                 "Ever Modded:\t%s\n"
                 "Essential functionality:\n"
                 "Mods:\t%s\n"
@@ -251,22 +287,22 @@ public:\
                 SFAE_VERSION,
                 memory::getCurrentModuleFileName().c_str(),
                 modCheck.is_valid() ? "Found" : "Not Found",
+                achievementAwarded.is_valid() ? "Found" : "Not Found",
+                hkAchievementFriendly->enabled() ? "Found" : "Not Found",
                 modsMessage.is_valid() ? "Found" : "Not Found",
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
                 //backgroundCheck1.is_valid() ? "Found" : "Not Found",
-                //backgroundCheck2.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
                 (modCheck.is_valid() && modCheck.is_enabled()) ? "Safe to use" : "Not safe to use",
                 pointers::everModded.raw() ? "Safe to use" : "Not safe to use"
             );
         }
 
-        if (settings.getRunInBackground() && backgroundCheck1.is_valid() && backgroundCheck2.is_valid())
+        if (settings.getRunInBackground() && backgroundCheck1.is_valid())
         {
             backgroundCheck1.enable();
-            backgroundCheck2.enable();
         }
 
         // do not go into the loop if we did not find "Ever Modded"

@@ -1,4 +1,4 @@
-Mod Check:
+﻿Mod Check:
     7FF6980649C1: 45 8B C2              - mov r8d,r10d
     7FF6980649C4: E8 17 7C ED 00        - call 7FF698F3C5E0
     7FF6980649C9: F7 00 00 80 00 00     - test [rax],00008000
@@ -26,6 +26,68 @@ Mod Check:
     40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48 // rex push
     ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48 // push
 
+Achievement Awarded:
+    .text:0000000002B52180 48 89 5C 24 08                                      mov     [rsp+arg_0], rbx
+    .text:0000000002B52185 48 89 74 24 10                                      mov     [rsp+arg_8], rsi
+    .text:0000000002B5218A 57                                                  push    rdi
+    .text:0000000002B5218B 48 81 EC 40 04 00 00                                sub     rsp, 440h
+    .text:0000000002B52192 41 8B F1                                            mov     esi, r9d
+    .text:0000000002B52195 48 8B F9                                            mov     rdi, rcx
+    .text:0000000002B52198 4C 8D 05 31 E3 88 02                                lea     r8, aAchievementDAw ; "Achievement %d awarded"
+    .text:0000000002B5219F BA 00 04 00 00                                      mov     edx, 400h       ; BufferCount
+    .text:0000000002B521A4 48 8D 4C 24 40                                      lea     rcx, [rsp+448h+Buffer] ; Buffer
+    .text:0000000002B521A9 E8 EA 46 6D FE                                      call    sprintf_s
+    .text:0000000002B521AE 48 8B 07                                            mov     rax, [rdi]
+    .text:0000000002B521B1 48 8B 98 10 02 00 00                                mov     rbx, [rax+210h]
+    .text:0000000002B521B8 48 8D 05 59 58 7C 02                                lea     rax, off_5317A18
+    .text:0000000002B521BF 48 89 44 24 20                                      mov     [rsp+448h+var_428], rax
+    .text:0000000002B521C4 48 8D 44 24 40                                      lea     rax, [rsp+448h+Buffer]
+    .text:0000000002B521C9 48 89 44 24 28                                      mov     [rsp+448h+var_420], rax
+    .text:0000000002B521CE 48 8D 4C 24 30                                      lea     rcx, [rsp+448h+var_418]
+    .text:0000000002B521D3 E8 38 65 C3 FD                                      call    sub_788710
+    .text:0000000002B521D8 90                                                  nop
+    .text:0000000002B521D9 45 33 C0                                            xor     r8d, r8d
+    .text:0000000002B521DC 48 8D 54 24 20                                      lea     rdx, [rsp+448h+var_428]
+    .text:0000000002B521E1 48 8B CF                                            mov     rcx, rdi
+    .text:0000000002B521E4 FF D3                                               call    rbx
+    .text:0000000002B521E6 90                                                  nop
+    .text:0000000002B521E7 48 8D 4C 24 30                                      lea     rcx, [rsp+448h+var_418]
+    .text:0000000002B521EC E8 17 A1 C3 FD                                      call    sub_78C308
+    .text:0000000002B521F1 90                                                  nop
+    .text:0000000002B521F2 48 8B 05 77 1F D2 03                                mov     rax, cs:qword_6874170
+    .text:0000000002B521F9 83 78 54 01                                         cmp     dword ptr [rax+54h], 1
+    .text:0000000002B521FD 75 11                                               jnz     short loc_2B52210 <--- nop this
+    .text:0000000002B521FF E8 50 71 C2 00                                      call    sub_3779354
+    .text:0000000002B52204 4C 8B 00                                            mov     r8, [rax]
+    .text:0000000002B52207 8B D6                                               mov     edx, esi
+    .text:0000000002B52209 48 8B C8                                            mov     rcx, rax
+    .text:0000000002B5220C 41 FF 50 28                                         call    qword ptr [r8+28h]
+    .text:0000000002B52210
+    .text:0000000002B52210                                     loc_2B52210:                            ; CODE XREF: achievementAwarded+7D↑j
+    .text:0000000002B52210 4C 8D 9C 24 40 04 00 00                             lea     r11, [rsp+448h+var_8]
+    .text:0000000002B52218 49 8B 5B 10                                         mov     rbx, [r11+10h]
+    .text:0000000002B5221C 49 8B 73 18                                         mov     rsi, [r11+18h]
+    .text:0000000002B52220 49 8B E3                                            mov     rsp, r11
+    .text:0000000002B52223 5F                                                  pop     rdi
+    .text:0000000002B52224 C3                                                  retn
+
+    48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C
+    +11
+
+Achievement Friendly:
+    .text:0000000001089B2C C6 83 50 07 00 00 01                                mov     byte ptr [rbx+750h], 1
+    .text:0000000001089B33
+    .text:0000000001089B33                                     loc_1089B33:                            ; CODE XREF: sub_10893F0+725↑j
+    .text:0000000001089B33                                                                             ; sub_10893F0+73A↑j
+    .text:0000000001089B33 4C 8D 83 58 07 00 00                                lea     r8, [rbx+758h]
+    .text:0000000001089B3A C6 44 24 20 00                                      mov     [rsp+5F0h+var_5D0], 0
+    .text:0000000001089B3F 45 33 C9                                            xor     r9d, r9d
+    .text:0000000001089B42 48 8D 15 5F AD 12 04                                lea     rdx, aAchievementFri ; "achievement_friendly"
+    .text:0000000001089B49 48 8D 4C 24 40                                      lea     rcx, [rsp+5F0h+var_5B0]
+    .text:0000000001089B4E E8 BD E6 01 00                                      call    jsonReadBool <--- hook this
+
+    C6 ? ? ? ? ? 01 4C ? ? ? ? ? ? C6 ? ? ? 00 ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 4C ? ? ? ? ? ? C6 ? ? ? 00 45 ? ?
+    +35 and rip()
 
 Mods Message:
     Starfield.exe+24DEE27: E9 19 01 00 00        - jmp Starfield.exe+24DEF45
