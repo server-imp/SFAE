@@ -265,19 +265,19 @@ public:\
             const char* fmt =
                 "SFAE Version:\t%s\n"
                 "Main Module:\t%s\n\n"
-                "At least one signature has not been found\n\n"
+                "At least one signature has not been found\n"
                 "Mod Check:\t%s\n"
-                "Achievement Awarded:\t%s\n"
-                "Achievement Friendly:\t%s\n"
+                "Achi Awarded:\t%s\n"
+                "Achi Friendly:\t%s\n"
                 "Mods Message:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
                 //"Bkgrnd Check 1:\t%s\n"
-                "Ever Modded:\t%s\n"
-                "Essential functionality:\n"
-                "Mods:\t%s\n"
-                "Console:\t%s";
+                "Ever Modded:\t%s\n\n"
+                "Will you get achievements?\n"
+                "With mods?\t%s\n"
+                "Using console?\t%s";
 
             util::fmt_msgbox(
                 NULL,
@@ -295,8 +295,8 @@ public:\
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
                 //backgroundCheck1.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
-                (modCheck.is_valid() && modCheck.is_enabled()) ? "Safe to use" : "Not safe to use",
-                pointers::everModded.raw() ? "Safe to use" : "Not safe to use"
+                (modCheck.is_valid() && modCheck.is_enabled()) ? "Yes" : "No",
+                pointers::everModded.raw() ? "Yes" : "No"
             );
         }
 
