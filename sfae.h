@@ -128,9 +128,8 @@ public:\
         auto modCheck = Patch(
             "Mod Check",
             {
-                0x31, // xor eax, eax
-                0xC0, //
-                0xC3, // ret
+                0x30, 0xC0, // xor al, al
+                0xC3,       // ret
             },
             { 
                 "E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB",
@@ -146,8 +145,7 @@ public:\
         auto achievementAwarded = Patch(
             "Achievement Awarded",
             {
-                0x90, // nop 
-                0x90  // nop
+                0x66, 0x90  // nop 2
             },
             { 
                 "48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C"
@@ -158,12 +156,7 @@ public:\
         auto modsMessage = Patch(
             "Mods Message",
             {
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90  // nop
+                0x66, 0x0F, 0x1F, 0x44, 0x00, 0x00  // nop word ptr [rax+rax+00]
             },
             { "89 ? ? ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? 48 ? ? ? E8 ? ? ? ? 4D ? ? ? 04 01 00 00 48 ? ? ? ? ? ? FF" });
 
@@ -185,11 +178,7 @@ public:\
         auto consoleMessage = Patch(
             "Console Message",
             {
-                0xC3, // ret
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90  // nop
+                0xC3 // ret
             },
             { "48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00" });
 
