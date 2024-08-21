@@ -131,14 +131,16 @@ public:\
                 0x31, // xor eax, eax
                 0xC0, //
                 0xC3, // ret
-                0x90, // nop
-                0x90, // nop 
-                0x90  // nop
             },
             { 
-                "40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48", // rex push
-                "? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48" // push
-            });
+                "E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB",
+            }, 0,
+            [](memory::handle& ptr) 
+            {
+                ptr = ptr.resolve_relative_call();
+                return true;
+            }
+        );
 
         // this patch is for disabling a check within the function that references string "Achievement %d awarded"
         auto achievementAwarded = Patch(

@@ -45,12 +45,12 @@ namespace memory
             return reinterpret_cast<std::uintptr_t>(pointer);
         }
 
-        handle add(uint32_t offset)
+        handle add(int32_t offset)
         {
             return handle(as<uint8_t*>() + offset);
         }
 
-        handle sub(uint32_t offset)
+        handle sub(int32_t offset)
         {
             return handle(as<uint8_t*>() + offset);
         }
@@ -58,6 +58,14 @@ namespace memory
         handle rip()
         {
             return add(as<uint32_t&>()).add(4);
+        }
+
+        handle resolve_relative_call()
+        {
+            int32_t offset = add(1).as<int32_t&>();
+            auto nextInstruction = add(5);
+
+            return nextInstruction.add(offset);
         }
     };
 
@@ -324,7 +332,7 @@ namespace memory
         bool enabled;
 
     public:
-        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const size_t offset = 0x00, const char* moduleName = nullptr)
+        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const size_t offset = 0x00, std::function<bool(memory::handle&)> callback = nullptr, const char* moduleName = nullptr)
         {
             this->name = name;
             this->buffer = buffer;
@@ -351,6 +359,13 @@ namespace memory
             {
                 err("Couldn't Find \"%s\"", name);
 
+                return;
+            }
+
+            if (callback && !callback(pointer))
+            {
+                valid = false;
+                err("Callback failed for \"%s\"", name);
                 return;
             }
 

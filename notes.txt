@@ -10,32 +10,31 @@
 
 
 Mod Check:
-    7FF6980649C1: 45 8B C2              - mov r8d,r10d
-    7FF6980649C4: E8 17 7C ED 00        - call 7FF698F3C5E0
-    7FF6980649C9: F7 00 00 80 00 00     - test [rax],00008000
-    7FF6980649CF: 74 02                 - je 7FF6980649D3
-    7FF6980649D1: B3 01                 - mov bl,01
-    7FF6980649D3: 8A C3                 - mov al,bl
-    7FF6980649D5: 48 83 C4 20           - add rsp,20
-    7FF6980649D9: 5B                    - pop rbx
-    7FF6980649DA: C3                    - ret
-    7FF6980649DB: CC                    - int 3
+    Starfield.exe+2736117: E8 30 3C E3 FF        - call Starfield.exe+2569D4C
+    Starfield.exe+273611C: 8A 44 24 5A           - mov al,[rsp+5A]
+    Starfield.exe+2736120: C0 E0 02              - shl al,02
+    Starfield.exe+2736123: 32 87 16 11 00 00     - xor al,[rdi+00001116]
+    Starfield.exe+2736129: 41 22 C7              - and al,r15l
+    Starfield.exe+273612C: 30 87 16 11 00 00     - xor [rdi+00001116],al
+    Starfield.exe+2736132: 44 84 BF 16 11 00 00  - test [rdi+00001116],r15l
+    Starfield.exe+2736139: 75 15                 - jne Starfield.exe+2736150
+    Starfield.exe+273613B: 33 D2                 - xor edx,edx
+    Starfield.exe+273613D: 48 8B 0D 6C 6F DD 03  - mov rcx,[Starfield.exe+650D0B0]
     // ---------- INJECTING HERE ----------
-    7FF6980649DC: 40 53                 - push rbx
+    Starfield.exe+2736144: E8 97 65 DA FE        - call Starfield.exe+14DC6E0
     // ---------- DONE INJECTING  ----------
-    7FF6980649DE: 48 83 EC 30           - sub rsp,30
-    7FF6980649E2: C6 44 24 48 00        - mov byte ptr [rsp+48],00
-    7FF6980649E7: 48 8B D9              - mov rbx,rcx
-    7FF6980649EA: 84 D2                 - test dl,dl
-    7FF6980649EC: 74 25                 - je 7FF698064A13
-    7FF6980649EE: 48 8B 05 33 03 10 04  - mov rax,[7FF69C164D28]
-    7FF6980649F5: 48 85 C0              - test rax,rax
-    7FF6980649F8: 74 09					- je 7FF698064A03
-    7FF6980649FA: F6 80 E6 10 00 00 04  - test byte ptr [rax+000010E6],04
-    7FF698064A01: 75 09                 - jne 7FF698064A0C
+    Starfield.exe+2736149: 84 C0                 - test al,al
+    Starfield.exe+273614B: 41 8A C4              - mov al,r12l
+    Starfield.exe+273614E: 74 03                 - je Starfield.exe+2736153
+    Starfield.exe+2736150: 41 8A C7              - mov al,r15l
+    Starfield.exe+2736153: 80 A7 16 11 00 00 FB  - and byte ptr [rdi+00001116],-05
+    Starfield.exe+273615A: 08 87 16 11 00 00     - or [rdi+00001116],al
+    Starfield.exe+2736160: 48 8B 8D 88 01 00 00  - mov rcx,[rbp+00000188]
+    Starfield.exe+2736167: 80 79 28 61           - cmp byte ptr [rcx+28],61
+    Starfield.exe+273616B: 72 2A                 - jb Starfield.exe+2736197
+    Starfield.exe+273616D: 45 8B C5              - mov r8d,r13d
 
-    40 ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48 // rex push
-    ? 48 ? ? ? C6 ? ? ? 00 48 ? ? ? ? 74 ? 48 // push
+    E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB
 
 Achievement Awarded:
     .text:0000000002B52180 48 89 5C 24 08                                      mov     [rsp+arg_0], rbx
