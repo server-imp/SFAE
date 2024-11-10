@@ -9,7 +9,7 @@
 #include "memory.h"
 #include "hook.h"
 
-#define SFAE_VERSION "1.4.5"
+#define SFAE_VERSION "1.4.6"
 
 using namespace memory;
 
