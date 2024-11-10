@@ -316,6 +316,12 @@ namespace memory
         }
     }
 
+    struct PatternData
+    {
+        const char* pattern{};
+        const size_t offset{};
+    };
+
     /// <summary>
     /// Helper class to find patterns and apply patches on them
     /// </summary>
@@ -332,7 +338,7 @@ namespace memory
         bool enabled;
 
     public:
-        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<const char*> patterns, const size_t offset = 0x00, std::function<bool(memory::handle&)> callback = nullptr, const char* moduleName = nullptr)
+        Patch(const char* name, std::vector<uint8_t> buffer, std::vector<PatternData> patterns, std::function<bool(memory::handle&)> callback = nullptr, const char* moduleName = nullptr)
         {
             this->name = name;
             this->buffer = buffer;
@@ -347,10 +353,10 @@ namespace memory
 
             for (auto& pattern : patterns)
             {
-                if (pattern::find(pattern, &pointer, moduleName))
+                if (pattern::find(pattern.pattern, &pointer, moduleName))
                 {
                     valid = true;
-                    pointer = pointer.add(offset);
+                    pointer = pointer.add(pattern.offset);
                     break;
                 }
             }

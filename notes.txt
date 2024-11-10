@@ -36,53 +36,86 @@ Mod Check:
 
     E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB
 
-Achievement Awarded:
-    .text:0000000002B52180 48 89 5C 24 08                                      mov     [rsp+arg_0], rbx
-    .text:0000000002B52185 48 89 74 24 10                                      mov     [rsp+arg_8], rsi
-    .text:0000000002B5218A 57                                                  push    rdi
-    .text:0000000002B5218B 48 81 EC 40 04 00 00                                sub     rsp, 440h
-    .text:0000000002B52192 41 8B F1                                            mov     esi, r9d
-    .text:0000000002B52195 48 8B F9                                            mov     rdi, rcx
-    .text:0000000002B52198 4C 8D 05 31 E3 88 02                                lea     r8, aAchievementDAw ; "Achievement %d awarded"
-    .text:0000000002B5219F BA 00 04 00 00                                      mov     edx, 400h       ; BufferCount
-    .text:0000000002B521A4 48 8D 4C 24 40                                      lea     rcx, [rsp+448h+Buffer] ; Buffer
-    .text:0000000002B521A9 E8 EA 46 6D FE                                      call    sprintf_s
-    .text:0000000002B521AE 48 8B 07                                            mov     rax, [rdi]
-    .text:0000000002B521B1 48 8B 98 10 02 00 00                                mov     rbx, [rax+210h]
-    .text:0000000002B521B8 48 8D 05 59 58 7C 02                                lea     rax, off_5317A18
-    .text:0000000002B521BF 48 89 44 24 20                                      mov     [rsp+448h+var_428], rax
-    .text:0000000002B521C4 48 8D 44 24 40                                      lea     rax, [rsp+448h+Buffer]
-    .text:0000000002B521C9 48 89 44 24 28                                      mov     [rsp+448h+var_420], rax
-    .text:0000000002B521CE 48 8D 4C 24 30                                      lea     rcx, [rsp+448h+var_418]
-    .text:0000000002B521D3 E8 38 65 C3 FD                                      call    sub_788710
-    .text:0000000002B521D8 90                                                  nop
-    .text:0000000002B521D9 45 33 C0                                            xor     r8d, r8d
-    .text:0000000002B521DC 48 8D 54 24 20                                      lea     rdx, [rsp+448h+var_428]
-    .text:0000000002B521E1 48 8B CF                                            mov     rcx, rdi
-    .text:0000000002B521E4 FF D3                                               call    rbx
-    .text:0000000002B521E6 90                                                  nop
-    .text:0000000002B521E7 48 8D 4C 24 30                                      lea     rcx, [rsp+448h+var_418]
-    .text:0000000002B521EC E8 17 A1 C3 FD                                      call    sub_78C308
-    .text:0000000002B521F1 90                                                  nop
-    .text:0000000002B521F2 48 8B 05 77 1F D2 03                                mov     rax, cs:qword_6874170
-    .text:0000000002B521F9 83 78 54 01                                         cmp     dword ptr [rax+54h], 1
-    .text:0000000002B521FD 75 11                                               jnz     short loc_2B52210 <--- nop this
-    .text:0000000002B521FF E8 50 71 C2 00                                      call    sub_3779354
-    .text:0000000002B52204 4C 8B 00                                            mov     r8, [rax]
-    .text:0000000002B52207 8B D6                                               mov     edx, esi
-    .text:0000000002B52209 48 8B C8                                            mov     rcx, rax
-    .text:0000000002B5220C 41 FF 50 28                                         call    qword ptr [r8+28h]
-    .text:0000000002B52210
-    .text:0000000002B52210                                     loc_2B52210:                            ; CODE XREF: achievementAwarded+7D↑j
-    .text:0000000002B52210 4C 8D 9C 24 40 04 00 00                             lea     r11, [rsp+448h+var_8]
-    .text:0000000002B52218 49 8B 5B 10                                         mov     rbx, [r11+10h]
-    .text:0000000002B5221C 49 8B 73 18                                         mov     rsi, [r11+18h]
-    .text:0000000002B52220 49 8B E3                                            mov     rsp, r11
-    .text:0000000002B52223 5F                                                  pop     rdi
-    .text:0000000002B52224 C3                                                  retn
+    Achievement Awarded:
+    .text:0000000142C6E650 48 89 5C 24 10                          mov     [rsp+arg_8], rbx
+    .text:0000000142C6E655 48 89 74 24 18                          mov     [rsp+arg_10], rsi
+    .text:0000000142C6E65A 57                                      push    rdi
+    .text:0000000142C6E65B 48 81 EC 40 04 00 00                    sub     rsp, 440h
+    .text:0000000142C6E662 41 8B F1                                mov     esi, r9d
+    .text:0000000142C6E665 48 8B F9                                mov     rdi, rcx
+    .text:0000000142C6E668 4C 8D 05 F1 6D 8F 02                    lea     r8, aAchievementDAw ; "Achievement %d awarded"
+    .text:0000000142C6E66F BA 00 04 00 00                          mov     edx, 400h
+    .text:0000000142C6E674 48 8D 4C 24 40                          lea     rcx, [rsp+448h+var_408]
+    .text:0000000142C6E679 E8 FA C3 5F FE                          call    sub_14126AA78
+    .text:0000000142C6E67E 48 8B 07                                mov     rax, [rdi]
+    .text:0000000142C6E681 48 8B 98 10 02 00 00                    mov     rbx, [rax+210h]
+    .text:0000000142C6E688 48 8D 05 B9 A8 82 02                    lea     rax, off_145498F48
+    .text:0000000142C6E68F 48 89 44 24 28                          mov     [rsp+448h+var_420], rax
+    .text:0000000142C6E694 48 8D 44 24 40                          lea     rax, [rsp+448h+var_408]
+    .text:0000000142C6E699 48 89 44 24 30                          mov     [rsp+448h+var_418], rax
+    .text:0000000142C6E69E 48 8D 4C 24 38                          lea     rcx, [rsp+448h+var_410]
+    .text:0000000142C6E6A3 E8 78 9E B2 FD                          call    sub_140798520
+    .text:0000000142C6E6A8 90                                      nop
+    .text:0000000142C6E6A9 45 33 C0                                xor     r8d, r8d
+    .text:0000000142C6E6AC 48 8D 54 24 28                          lea     rdx, [rsp+448h+var_420]
+    .text:0000000142C6E6B1 48 8B CF                                mov     rcx, rdi
+    .text:0000000142C6E6B4 FF D3                                   call    rbx
+    .text:0000000142C6E6B6 90                                      nop
+    .text:0000000142C6E6B7 48 8D 4C 24 38                          lea     rcx, [rsp+448h+var_410]
+    .text:0000000142C6E6BC E8 57 DA B2 FD                          call    sub_14079C118
+    .text:0000000142C6E6C1 90                                      nop
+    .text:0000000142C6E6C2 48 8B 05 2F 6D A5 03                    mov     rax, cs:qword_1466C53F8
+    .text:0000000142C6E6C9 48 85 C0                                test    rax, rax
+    .text:0000000142C6E6CC 74 09                                   jz      short loc_142C6E6D7
+    .text:0000000142C6E6CE F6 80 26 11 00 00 04                    test    byte ptr [rax+1126h], 4
+    .text:0000000142C6E6D5 75 7D                                   jnz     short loc_142C6E754
+    .text:0000000142C6E6D7
+    .text:0000000142C6E6D7                         loc_142C6E6D7:                          ; CODE XREF: sub_142C6E650+7C↑j
+    .text:0000000142C6E6D7 80 3D FC 41 DD 03 00                    cmp     cs:byte_146A428DA, 0
+    .text:0000000142C6E6DE 75 74                                   jnz     short loc_142C6E754
+    .text:0000000142C6E6E0 C6 84 24 50 04 00 00 00                 mov     [rsp+448h+arg_0], 0
+    .text:0000000142C6E6E8 48 8B 1D E1 1C 97 03                    mov     rbx, cs:qword_1465E03D0
+    .text:0000000142C6E6EF 48 8D 84 24 50 04 00 00                 lea     rax, [rsp+448h+arg_0]
+    .text:0000000142C6E6F7 48 89 44 24 20                          mov     [rsp+448h+var_428], rax
+    .text:0000000142C6E6FC 48 8D 54 24 20                          lea     rdx, [rsp+448h+var_428]
+    .text:0000000142C6E701 48 8D 8B 48 15 00 00                    lea     rcx, [rbx+1548h]
+    .text:0000000142C6E708 E8 B3 8F 86 FE                          call    sub_1414D76C0
+    .text:0000000142C6E70D 83 F8 01                                cmp     eax, 1
+    .text:0000000142C6E710 75 27                                   jnz     short loc_142C6E739
+    .text:0000000142C6E712 48 8D 8B 58 15 00 00                    lea     rcx, [rbx+1558h]
+    .text:0000000142C6E719 48 8D 54 24 20                          lea     rdx, [rsp+448h+var_428]
+    .text:0000000142C6E71E E8 9D 8F 86 FE                          call    sub_1414D76C0
+    .text:0000000142C6E723 83 F8 01                                cmp     eax, 1
+    .text:0000000142C6E726 75 11                                   jnz     short loc_142C6E739
+    .text:0000000142C6E728 48 8D 8B 68 15 00 00                    lea     rcx, [rbx+1568h]
+    .text:0000000142C6E72F 48 8D 54 24 20                          lea     rdx, [rsp+448h+var_428]
+    .text:0000000142C6E734 E8 87 8F 86 FE                          call    sub_1414D76C0
+    .text:0000000142C6E739
+    .text:0000000142C6E739                         loc_142C6E739:                          ; CODE XREF: sub_142C6E650+C0↑j
+    .text:0000000142C6E739                                                                 ; sub_142C6E650+D6↑j
+    .text:0000000142C6E739 80 BC 24 50 04 00 00 00                 cmp     [rsp+448h+arg_0], 0
+    .text:0000000142C6E741 75 11                                   jnz     short loc_142C6E754 <--------------------------------------- nop this
+    .text:0000000142C6E743 E8 DC 27 C5 00                          call    sub_1438C0F24
+    .text:0000000142C6E748 4C 8B 00                                mov     r8, [rax]
+    .text:0000000142C6E74B 8B D6                                   mov     edx, esi
+    .text:0000000142C6E74D 48 8B C8                                mov     rcx, rax
+    .text:0000000142C6E750 41 FF 50 28                             call    qword ptr [r8+28h]
+    .text:0000000142C6E754
+    .text:0000000142C6E754                         loc_142C6E754:                          ; CODE XREF: sub_142C6E650+85↑j
+    .text:0000000142C6E754                                                                 ; sub_142C6E650+8E↑j ...
+    .text:0000000142C6E754 4C 8D 9C 24 40 04 00 00                 lea     r11, [rsp+448h+var_8]
+    .text:0000000142C6E75C 49 8B 5B 18                             mov     rbx, [r11+18h]
+    .text:0000000142C6E760 49 8B 73 20                             mov     rsi, [r11+20h]
+    .text:0000000142C6E764 49 8B E3                                mov     rsp, r11
+    .text:0000000142C6E767 5F                                      pop     rdi
+    .text:0000000142C6E768 C3                                      retn
 
-    48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C
-    +11
+    old:
+        48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C
+        +11
+    current:
+        83 ? ? 75 ? ? ? ? ? ? ? ? ? ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 75 ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 41
+        +30
 
 Achievement Friendly:
     .text:0000000001089B2C C6 83 50 07 00 00 01                                mov     byte ptr [rbx+750h], 1
