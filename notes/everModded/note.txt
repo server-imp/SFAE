@@ -1,0 +1,1 @@
+pattern scan for one of the references to locate the memory address of everModded variable

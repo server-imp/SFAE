@@ -17,6 +17,11 @@ namespace memory
             this->pointer = nullptr;
         }
 
+        handle(uint64_t pointer)
+        {
+            this->pointer = (void*)pointer;
+        }
+
         handle(void* pointer)
         {
             this->pointer = pointer;
@@ -68,6 +73,39 @@ namespace memory
             return nextInstruction.add(offset);
         }
     };
+
+    // hacky way to find the start of a function if it is preceded by at least two int3's or an int3 and a ret
+    bool find_function_start(memory::handle instruction, memory::handle* result, size_t size = 1024)
+    {
+        if (result) *result = memory::handle();
+
+        uintptr_t baseVA = (uintptr_t)GetModuleHandleA(NULL);
+        uintptr_t va = instruction.as<uintptr_t>();
+        size_t    ccSeq = 0;
+
+        while (va > baseVA) {
+            --va;
+            uint8_t b = *reinterpret_cast<uint8_t*>(va);
+
+            if (b == 0xCC && *reinterpret_cast<uint8_t*>(va - 1))
+            {
+                if (result) *result = memory::handle(va + 1);
+                return true;
+            }
+
+            if (b == 0xCC) {
+                if (++ccSeq >= 2) {
+                    if (result) *result = va + ccSeq;
+                    return true;
+                }
+            }
+            else {
+                ccSeq = 0;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Gets the current module filename
@@ -236,9 +274,13 @@ namespace memory
             auto bytes = parsed.first;
             auto mask = parsed.second;
 
+            uint8_t* closestMatch{};
+            size_t closestMatchCount{};
+
             for (size_t i = 0; i < modInfo.SizeOfImage - bytes.size(); i++)
             {
                 bool found = true;
+                size_t matchCount{};
 
                 for (size_t j = 0; j < bytes.size(); j++)
                 {
@@ -250,6 +292,8 @@ namespace memory
                         found = false;
                         break;
                     }
+
+                    matchCount++;
                 }
 
                 if (found)
@@ -259,7 +303,16 @@ namespace memory
 
                     return true;
                 }
+
+                if (matchCount > closestMatchCount)
+                {
+                    closestMatchCount = matchCount;
+                    closestMatch = start + i;
+                }
             }
+
+            if (closestMatch)
+                dbg("Failed to find pattern, closest match is 0x%p [%d/%d]", closestMatch, closestMatchCount, bytes.size());
 
             return false;
         }
@@ -314,6 +367,53 @@ namespace memory
 
             return false;
         }
+
+        bool find_string_reference(const std::string& string, memory::handle* result = nullptr) {
+            auto hMod = GetModuleHandleA(nullptr);
+            MODULEINFO mi{};
+            if (!GetModuleInformation(GetCurrentProcess(), hMod, &mi, sizeof(mi)))
+                return false;
+            auto base = reinterpret_cast<uint8_t*>(hMod);
+            size_t imgSize = mi.SizeOfImage;
+            auto text = string.data();
+            size_t len = string.size();
+
+            for (size_t i = 0; i + len < imgSize; ++i) {
+                if (memcmp(base + i, text, len) != 0) continue;
+                uint8_t* strAddr = base + i;
+                dbg("StrRef Text \"%s\": Found at %p", string.c_str(), (void*)strAddr);
+
+                for (size_t j = 0; j + 7 < imgSize; ++j) {
+                    uint8_t* insn = base + j;
+                    if (insn[0] != 0x48 || insn[1] != 0x8D)      // must be REX.W + LEA
+                        continue;
+                    uint8_t modrm = insn[2];
+                    if ((modrm & 0xC7) != 0x05)                  // mask out reg bits; require mod=00, rm=101
+                        continue;
+                    int32_t disp = *reinterpret_cast<int32_t*>(insn + 3);
+                    if (insn + 7 + disp == strAddr) {
+                        if (result) *result = memory::handle(insn);
+                        info("StrRef \"%s\": Found at %p", string.c_str(), (void*)insn);
+                        return true;
+                    }
+                }
+                // no break – keep looking if this occurrence had no real ref
+            }
+            return false;
+        }
+    }
+
+    void* try_near_alloc(void* target, SIZE_T size) {
+        const SIZE_T granularity = 0x10000; // 64KB
+        uintptr_t base = (uintptr_t)target;
+        for (int64_t offset = 0; offset < 0x7FFF0000; offset += granularity) {
+            for (int sign = -1; sign <= 1; sign += 2) {
+                uintptr_t try_addr = base + sign * offset;
+                void* p = VirtualAlloc((void*)try_addr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+                if (p) return p;
+            }
+        }
+        return nullptr;
     }
 
     struct PatternData
@@ -338,6 +438,14 @@ namespace memory
         bool enabled;
 
     public:
+        Patch(const char* name, std::vector<uint8_t> buffer, memory::handle handle)
+        {
+            this->name = name;
+            this->buffer = buffer;
+            this->pointer = handle;
+            this->valid = handle.raw();
+        }
+
         Patch(const char* name, std::vector<uint8_t> buffer, std::vector<PatternData> patterns, std::function<bool(memory::handle&)> callback = nullptr, const char* moduleName = nullptr)
         {
             this->name = name;
@@ -353,6 +461,7 @@ namespace memory
 
             for (auto& pattern : patterns)
             {
+                dbg("Attempting to find pattern for %s", name);
                 if (pattern::find(pattern.pattern, &pointer, moduleName))
                 {
                     valid = true;
@@ -444,6 +553,146 @@ namespace memory
 
             if (!suppressLogging)
                 info("Updated \"%s\" buffer", name);
+
+            return true;
+        }
+    };
+
+    class StringRefPatch
+    {
+    private:
+        const char* name;
+        std::string text;
+
+        // pointer to the first byte of the lea instruction
+        memory::handle instruction;
+
+        // pointer to the allocated string buffer we want to redirect to
+        memory::handle alloc;
+
+        // pointer to the original string
+        memory::handle originalString;
+
+        bool valid;
+        bool enabled;
+
+    public:
+        StringRefPatch(const char* name, const char* originalString)
+        {
+            this->name = name;
+
+            if (!pattern::find_string(originalString, &this->originalString))
+            {
+                return;
+            }
+
+            if (!pattern::find_string_reference(originalString, &instruction))
+            {
+                return;
+            }
+
+            valid = true;
+        }
+
+        const bool is_valid() const
+        {
+            return valid;
+        }
+
+        const bool is_enabled() const
+        {
+            return enabled;
+        }
+
+        bool enable(bool suppressLogging = false)
+        {
+            if (!valid || enabled || text.empty() || !alloc.raw())
+            {
+                info("Couldn't enable \"%s\"", name);
+                return false;
+            }
+
+            // compute address of next instruction (RIP after the 7-byte LEA)
+            auto instrAddr = reinterpret_cast<uintptr_t>(instruction.raw());
+            auto nextInstr = instrAddr + 7;
+            // compute new 32-bit displacement to our allocated buffer
+            auto targetAddr = reinterpret_cast<uintptr_t>(alloc.raw());
+            int32_t newDisp = static_cast<int32_t>(targetAddr - nextInstr);
+
+            // make code page writable, patch the immediate, then restore protection
+            DWORD oldProt;
+            VirtualProtect(instruction.raw(), 7, PAGE_EXECUTE_READWRITE, &oldProt);
+            instruction.add(3).as<int32_t&>() = newDisp;
+            VirtualProtect(instruction.raw(), 7, oldProt, &oldProt);
+            FlushInstructionCache(GetCurrentProcess(), instruction.raw(), 7);
+
+            if (!suppressLogging)
+                info("Enabled \"%s\"", name);
+
+            enabled = true;
+            return true;
+        }
+
+        bool disable(bool suppressLogging = false)
+        {
+            if (!valid || !enabled || text.empty() || !originalString.raw())
+            {
+                info("Couldn't disable \"%s\"", name);
+                return false;
+            }
+
+            // compute address of next instruction (RIP after the 7-byte LEA)
+            auto instrAddr = reinterpret_cast<uintptr_t>(instruction.raw());
+            auto nextInstr = instrAddr + 7;
+            // compute new 32-bit displacement to our allocated buffer
+            auto targetAddr = reinterpret_cast<uintptr_t>(originalString.raw());
+            int32_t newDisp = static_cast<int32_t>(targetAddr - nextInstr);
+
+            // make code page writable, patch the immediate, then restore protection
+            DWORD oldProt;
+            VirtualProtect(instruction.raw(), 7, PAGE_EXECUTE_READWRITE, &oldProt);
+            instruction.add(3).as<int32_t&>() = newDisp;
+            VirtualProtect(instruction.raw(), 7, oldProt, &oldProt);
+            FlushInstructionCache(GetCurrentProcess(), instruction.raw(), 7);
+
+            if (!suppressLogging)
+                info("Disabled \"%s\"", name);
+
+            enabled = false;
+            return true;
+        }
+
+        bool set_text(const char* fmt, ...)
+        {
+            constexpr size_t BUFFER_SIZE = 1024;
+            va_list args;
+            va_start(args, fmt);
+            char buffer[BUFFER_SIZE]{ 0 };
+            vsprintf_s(buffer, fmt, args);
+            va_end(args);
+
+            this->text = buffer;
+
+            bool wasEnabled = enabled;
+            if (enabled)
+            {
+                disable();
+            }
+
+            if (!alloc.raw())
+            {
+                alloc = memory::handle(try_near_alloc(instruction.as<void*>(), BUFFER_SIZE));
+                if (!alloc.raw())
+                {
+                    err("Failed to allocate buffer for \"%s\"", name);
+                    return false;
+                }
+            }
+
+            memcpy_s(alloc.raw(), BUFFER_SIZE, buffer, BUFFER_SIZE);
+
+            if (wasEnabled)
+                enable();
 
             return true;
         }

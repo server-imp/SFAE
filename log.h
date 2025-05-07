@@ -71,4 +71,12 @@ namespace logging
 #define  err(fmt, ...) logging::print(true, " ERR", fmt, __VA_ARGS__)
 #define  err_no_newline(fmt, ...) logging::print(false, "ERR", fmt, __VA_ARGS__)
 
+#ifndef _DEBUG
+#define dbg(fmt, ...)
+#define dbg_no_newline(fmt, ...)
+#else
+#define dbg(fmt, ...) logging::print(true, " DBG", fmt, __VA_ARGS__)
+#define dbg_no_newline(fmt, ...) logging::print(false, "DBG", fmt, __VA_ARGS__)
+#endif
+
 #endif

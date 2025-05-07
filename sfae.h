@@ -3,13 +3,16 @@
 #define _SFAE
 
 #include "pch.h"
+// #define _DEBUG
 #include "log.h"
 #include "cfg.h"
 #include "asi.h"
 #include "memory.h"
 #include "hook.h"
 
-#define SFAE_VERSION "1.4.6"
+#define SFAE_VERSION "1.4.7"
+
+const char* MESSAGE = "SFAE Version " SFAE_VERSION ":\n\nAchievements are enabled!";
 
 using namespace memory;
 
@@ -134,6 +137,7 @@ public:\
             },
             { 
                 {"E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB"},
+                {"E8 ? ? ? ? ? ? 74 ? ? 04 ? ? ? ? ? 00 00 FB"},
             },
             [](memory::handle& ptr) 
             {
@@ -153,45 +157,34 @@ public:\
                 {"48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C", 11},
                 {"83 ? ? 75 ? ? ? ? ? ? ? ? ? ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 75 ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 41", 30}
             });
-        
-        // this patch is for the message that pops up when you try to load a save while mods are loaded
-        auto modsMessage = Patch(
-            "Mods Message",
-            {
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90  // nop
-            },
-            { {"89 ? ? ? ? ? ? ? 48 ? ? ? ? ? ? E8 ? ? ? ? 48 ? ? ? E8 ? ? ? ? 4D ? ? ? 04 01 00 00 48 ? ? ? ? ? ? FF"} });
+
+
+        memory::handle consoleMessagePtr;
+        if (!pattern::find_string_reference("$UsingConsoleMayDisableAchievements", &consoleMessagePtr))
+        {
+            err("Could not find string reference to $UsingConsoleMayDisableAchievements");
+        }
+
+        if (!memory::find_function_start(consoleMessagePtr, &consoleMessagePtr))
+        {
+            err("Could not find function start of consoleMessagePtr");
+        }
 
         // this patch is for the message it shows in the console warning popup
-        auto consoleMessageText = StringPatch(
-            "Console Message Text",
-            "_",
-            "$UsingConsoleMayDisableAchievements");
-        consoleMessageText.set_text("SFAE %s: Working", SFAE_VERSION);
+        auto consoleMessageText = StringRefPatch("Console Message Text", "$UsingConsoleMayDisableAchievements");
+        consoleMessageText.set_text(MESSAGE);
 
         // this patch is for the message it shows in the mods loaded warning popup
-        auto modsMessageText = StringPatch(
-            "Mods Message Text",
-            "_",
-            "$LoadVanillaSaveWithMods");
-        modsMessageText.set_text("SFAE %s: Working", SFAE_VERSION);
+        auto modsMessageText = StringRefPatch("Mods Message Text", "$LoadVanillaSaveWithMods");
+        modsMessageText.set_text(MESSAGE);
 
         // this patch is for disabling the console warning popup
         auto consoleMessage = Patch(
             "Console Message",
             {
                 0xC3, // ret
-                0x90, // nop
-                0x90, // nop
-                0x90, // nop
-                0x90  // nop
             },
-            { {"48 ? ? ? ? ? 48 ? ? ? 48 ? ? 80 ? ? 00 0F ? ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? 00 00 00 00"} });
+            consoleMessagePtr);
 
         // find Achievement Friendly
         if (!pattern::find("C6 ? ? ? ? ? 01 4C ? ? ? ? ? ? C6 ? ? ? 00 ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 4C ? ? ? ? ? ? C6 ? ? ? 00 45 ? ?", &pointers::jsonReadBool))
@@ -215,9 +208,19 @@ public:\
         }
 
         // find everModded
+        dbg("Attempting to find pattern for everModded");
         if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
         {
-            err("Couldn't Find \"Ever Modded\"");
+            if (!pattern::find("04 75 ? ? ? ? ? ? ? 00 74 ? ? 01", &pointers::everModded))
+            {
+                err("Couldn't Find \"Ever Modded\"");
+            }
+            else
+            {
+                pointers::everModded = pointers::everModded.add(5).rip().add(1);
+
+                info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            }
         }
         else
         {
@@ -225,14 +228,14 @@ public:\
 
             info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
         }
-
+        
         // these patches are for allowing the game to run properly while tabbed out
         auto backgroundCheck1 = Patch(
             "Background Check 1",
             {
                 0xEB, // jne -> jmp
             },
-            { {"75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8"} });
+            { {"75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8"} }, NULL);
 
         modsMessageText.enable();
         consoleMessageText.enable();
@@ -243,12 +246,11 @@ public:\
             !achievementAwarded.enable() ||
             !pointers::everModded.raw())
         {
-            consoleMessageText.set_text("SFAE %s: Not working", SFAE_VERSION);
-            modsMessageText.set_text("SFAE %s: Not working", SFAE_VERSION);
+            consoleMessageText.set_text("Achievements: Off");
+            modsMessageText.set_text("Achievements: Off");
         }
         else
         {
-            modsMessage.enable();
             if (!settings.getShowInGameMessage())
                 consoleMessage.enable();
         }
@@ -257,11 +259,9 @@ public:\
         if (!modCheck.is_valid() ||
             !achievementAwarded.is_valid() ||
             !hkAchievementFriendly->enabled() ||
-            !modsMessage.is_valid() ||
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
-            //!backgroundCheck1.is_valid() ||
             !pointers::everModded.raw())
         {
             const char* fmt =
@@ -271,11 +271,9 @@ public:\
                 "Mod Check:\t%s\n"
                 "Achi Awarded:\t%s\n"
                 "Achi Friendly:\t%s\n"
-                "Mods Message:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
-                //"Bkgrnd Check 1:\t%s\n"
                 "Ever Modded:\t%s\n\n"
                 "Will you get achievements?\n"
                 "With mods?\t%s\n"
@@ -291,11 +289,9 @@ public:\
                 modCheck.is_valid() ? "Found" : "Not Found",
                 achievementAwarded.is_valid() ? "Found" : "Not Found",
                 hkAchievementFriendly->enabled() ? "Found" : "Not Found",
-                modsMessage.is_valid() ? "Found" : "Not Found",
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
-                //backgroundCheck1.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
                 (modCheck.is_valid() && modCheck.is_enabled()) ? "Yes" : "No",
                 pointers::everModded.raw() ? "Yes" : "No"
