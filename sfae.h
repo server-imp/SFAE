@@ -187,13 +187,13 @@ public:\
             consoleMessagePtr);
 
         // find Achievement Friendly
-        if (!pattern::find("C6 ? ? ? ? ? 01 4C ? ? ? ? ? ? C6 ? ? ? 00 ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 4C ? ? ? ? ? ? C6 ? ? ? 00 45 ? ?", &pointers::jsonReadBool))
+        if (!pattern::find("E8 ? ? ? ? 84 C0 74 ? 45 33 C9 C6 44 24", &pointers::jsonReadBool))
         {
             err("Couldn't Find \"Achievement Friendly\"");
         }
         else
         {
-            pointers::jsonReadBool = pointers::jsonReadBool.add(35).rip();
+            pointers::jsonReadBool = pointers::jsonReadBool.resolve_relative_call();
 
             info("Found \"Achievement Friendly\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::jsonReadBool.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
             hkAchievementFriendly = new DetourHook("Achievement Friendly", pointers::jsonReadBool.raw(), achievementFriendlyHk);
@@ -209,7 +209,7 @@ public:\
 
         // find everModded
         dbg("Attempting to find pattern for everModded");
-        if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
+        if (!pattern::find("C6 05 ? ? ? ? ? B2 ? 48 89 44 24", &pointers::everModded))
         {
             if (!pattern::find("04 75 ? ? ? ? ? ? ? 00 74 ? ? 01", &pointers::everModded))
             {
@@ -224,18 +224,29 @@ public:\
         }
         else
         {
-            pointers::everModded = pointers::everModded.add(24).rip().add(1);
+            pointers::everModded = pointers::everModded.add(2).rip().add(1);
 
             info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
         }
+
+        // Check for if mods are loaded. This check is not super necessary, it just prevents that stupid dialog box from opening when loading a save.
+        auto areModsLoadedFileCheck = Patch(
+            "Mod File Check",
+            {
+                0x00
+            },
+            {
+                {"83 0B 02 83 3B 00", 2}
+            });
         
         // these patches are for allowing the game to run properly while tabbed out
         auto backgroundCheck1 = Patch(
-            "Background Check 1",
+            "Is Running In The Background Check",
             {
-                0xEB, // jne -> jmp
+                0x90, // nop
+                0xE9  // jne -> jmp
             },
-            { {"75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8"} }, NULL);
+            { {"0F 85 ? ? ? ? 45 84 FF 0F 85 ? ? ? ? C6 45"} }, NULL);
 
         modsMessageText.enable();
         consoleMessageText.enable();
@@ -253,6 +264,10 @@ public:\
         {
             if (!settings.getShowInGameMessage())
                 consoleMessage.enable();
+            if (areModsLoadedFileCheck.is_valid())
+            {
+                areModsLoadedFileCheck.enable();
+            }
         }
 
         // Check if all patches and everModded are valid
