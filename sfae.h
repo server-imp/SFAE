@@ -238,7 +238,16 @@ public:\
             {
                 {"83 0B 02 83 3B 00", 2}
             });
-        
+
+        auto fixCreationsNotBeingLoadedForSaves = Patch(
+            "Fix Creations Save Loading Issue",
+            {
+                0xEB
+            },
+            {
+                {"74 ? 48 3B D8 0F 85 ? ? ? ? 41 B8", NULL}
+            });
+
         // these patches are for allowing the game to run properly while tabbed out
         auto backgroundCheck1 = Patch(
             "Is Running In The Background Check",
@@ -268,6 +277,10 @@ public:\
             {
                 areModsLoadedFileCheck.enable();
             }
+            if (fixCreationsNotBeingLoadedForSaves.is_valid())
+            {
+                fixCreationsNotBeingLoadedForSaves.enable();
+            }
         }
 
         // Check if all patches and everModded are valid
@@ -277,6 +290,7 @@ public:\
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
+            !fixCreationsNotBeingLoadedForSaves.is_valid() ||
             !pointers::everModded.raw())
         {
             const char* fmt =
@@ -292,7 +306,8 @@ public:\
                 "Ever Modded:\t%s\n\n"
                 "Will you get achievements?\n"
                 "With mods?\t%s\n"
-                "Using console?\t%s";
+                "Using console?\t%s\n"
+                "Will quickload work?\t%s";
 
             util::fmt_msgbox(
                 NULL,
@@ -309,7 +324,8 @@ public:\
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
                 (modCheck.is_valid() && modCheck.is_enabled()) ? "Yes" : "No",
-                pointers::everModded.raw() ? "Yes" : "No"
+                pointers::everModded.raw() ? "Yes" : "No",
+                (fixCreationsNotBeingLoadedForSaves.is_valid() && fixCreationsNotBeingLoadedForSaves.is_enabled()) ? "Yes" : "No"
             );
         }
 
