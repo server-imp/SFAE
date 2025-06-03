@@ -401,6 +401,77 @@ namespace memory
             }
             return false;
         }
+
+        bool find_string(const wchar_t* string, memory::handle* result = nullptr, const wchar_t* moduleName = nullptr)
+        {
+            if (!string)
+                return false;
+
+            auto strLen = wcslen(string) * sizeof(wchar_t);
+
+            auto hModule = GetModuleHandleW(moduleName);
+            if (!hModule)
+                return false;
+
+            MODULEINFO modInfo;
+            if (!GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO)))
+                return false;
+
+            auto start = reinterpret_cast<uint8_t*>(modInfo.lpBaseOfDll);
+            auto end = start + modInfo.SizeOfImage;
+
+            for (size_t i = 0; i < modInfo.SizeOfImage; i++)
+            {
+                if (memcmp(start + i, string, strLen) == 0)
+                {
+                    if (result)
+                        *result = memory::handle(start + i);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        bool find_string_reference(const std::wstring& string, memory::handle* result = nullptr, const char* name = nullptr)
+        {
+            auto hMod = GetModuleHandleW(nullptr);
+            MODULEINFO mi{};
+            if (!GetModuleInformation(GetCurrentProcess(), hMod, &mi, sizeof(mi)))
+                return false;
+
+            auto base = reinterpret_cast<uint8_t*>(hMod);
+            size_t imgSize = mi.SizeOfImage;
+            auto text = reinterpret_cast<const uint8_t*>(string.data());
+            size_t len = string.size() * sizeof(wchar_t);
+
+            for (size_t i = 0; i + len < imgSize; ++i)
+            {
+                if (memcmp(base + i, text, len) != 0) continue;
+                uint8_t* strAddr = base + i;
+                dbg("StrRef Text \"%s\": Found at %p", name, (void*)strAddr);
+
+                for (size_t j = 0; j + 7 < imgSize; ++j)
+                {
+                    uint8_t* insn = base + j;
+                    if (insn[0] != 0x48 || insn[1] != 0x8D)      // must be REX.W + LEA
+                        continue;
+                    uint8_t modrm = insn[2];
+                    if ((modrm & 0xC7) != 0x05)                  // mask out reg bits; require mod=00, rm=101
+                        continue;
+                    int32_t disp = *reinterpret_cast<int32_t*>(insn + 3);
+                    if (insn + 7 + disp == strAddr)
+                    {
+                        if (result) *result = memory::handle(insn);
+                        info("StrRef \"%s\": Found at %p", name, (void*)insn);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
     }
 
     void* try_near_alloc(void* target, SIZE_T size) {
@@ -690,6 +761,128 @@ namespace memory
             }
 
             memcpy_s(alloc.raw(), BUFFER_SIZE, buffer, BUFFER_SIZE);
+
+            if (wasEnabled)
+                enable();
+
+            return true;
+        }
+    };
+
+    class UTF16StringRefPatch
+    {
+    private:
+        const char* name;
+        std::wstring text;
+
+        memory::handle instruction;
+        memory::handle alloc;
+        memory::handle originalString;
+
+        bool valid;
+        bool enabled;
+
+    public:
+        UTF16StringRefPatch(const char* name, const wchar_t* originalString)
+        {
+            this->name = name;
+
+            if (!pattern::find_string(originalString, &this->originalString))
+            {
+                return;
+            }
+
+            if (!pattern::find_string_reference(originalString, &instruction, name))
+            {
+                return;
+            }
+
+            valid = true;
+        }
+
+        const bool is_valid() const { return valid; }
+        const bool is_enabled() const { return enabled; }
+
+        bool enable(bool suppressLogging = false)
+        {
+            if (!valid || enabled || text.empty() || !alloc.raw())
+            {
+                info("Couldn't enable \"%s\"", name);
+                return false;
+            }
+
+            auto instrAddr = reinterpret_cast<uintptr_t>(instruction.raw());
+            auto nextInstr = instrAddr + 7;
+            auto targetAddr = reinterpret_cast<uintptr_t>(alloc.raw());
+            int32_t newDisp = static_cast<int32_t>(targetAddr - nextInstr);
+
+            DWORD oldProt;
+            VirtualProtect(instruction.raw(), 7, PAGE_EXECUTE_READWRITE, &oldProt);
+            instruction.add(3).as<int32_t&>() = newDisp;
+            VirtualProtect(instruction.raw(), 7, oldProt, &oldProt);
+            FlushInstructionCache(GetCurrentProcess(), instruction.raw(), 7);
+
+            if (!suppressLogging)
+                info("Enabled \"%s\"", name);
+
+            enabled = true;
+            return true;
+        }
+
+        bool disable(bool suppressLogging = false)
+        {
+            if (!valid || !enabled || text.empty() || !originalString.raw())
+            {
+                info("Couldn't disable \"%s\"", name);
+                return false;
+            }
+
+            auto instrAddr = reinterpret_cast<uintptr_t>(instruction.raw());
+            auto nextInstr = instrAddr + 7;
+            auto targetAddr = reinterpret_cast<uintptr_t>(originalString.raw());
+            int32_t newDisp = static_cast<int32_t>(targetAddr - nextInstr);
+
+            DWORD oldProt;
+            VirtualProtect(instruction.raw(), 7, PAGE_EXECUTE_READWRITE, &oldProt);
+            instruction.add(3).as<int32_t&>() = newDisp;
+            VirtualProtect(instruction.raw(), 7, oldProt, &oldProt);
+            FlushInstructionCache(GetCurrentProcess(), instruction.raw(), 7);
+
+            if (!suppressLogging)
+                info("Disabled \"%s\"", name);
+
+            enabled = false;
+            return true;
+        }
+
+        bool set_text(const wchar_t* fmt, ...)
+        {
+            constexpr size_t BUFFER_SIZE = 1024;
+            va_list args;
+            va_start(args, fmt);
+            wchar_t buffer[BUFFER_SIZE]{ 0 };
+            vswprintf_s(buffer, fmt, args);
+            va_end(args);
+
+            text = buffer;
+
+            bool wasEnabled = enabled;
+            if (enabled)
+            {
+                disable();
+            }
+
+            if (!alloc.raw())
+            {
+                alloc = memory::handle(try_near_alloc(instruction.as<void*>(), BUFFER_SIZE * sizeof(wchar_t)));
+                if (!alloc.raw())
+                {
+                    //err(L"Failed to allocate buffer for \"%s\"", name);
+                    return false;
+                }
+            }
+
+            memcpy_s(alloc.raw(), BUFFER_SIZE * sizeof(wchar_t), buffer, BUFFER_SIZE * sizeof(wchar_t));
 
             if (wasEnabled)
                 enable();

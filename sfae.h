@@ -10,9 +10,10 @@
 #include "memory.h"
 #include "hook.h"
 
-#define SFAE_VERSION "1.4.7"
+#define SFAE_VERSION "2.0.0"
 
-const char* MESSAGE = "SFAE Version " SFAE_VERSION ":\n\nAchievements are enabled!";
+const char* MESSAGE = "SFAE Version " SFAE_VERSION ":\nAchievements are enabled!";
+const wchar_t* WIDE_MESSAGE = L"SFAE Version " SFAE_VERSION L":\nAchievements are enabled!";
 
 using namespace memory;
 
@@ -55,28 +56,6 @@ public:\
             _cfg.save();
         }
     } settings("sfae.cfg");
-
-    namespace pointers
-    {
-        memory::handle everModded;
-        memory::handle jsonReadBool;
-    }
-
-    /// <summary>
-    /// We hook a function that the game uses to read information about Creation mods and set every mod's "achievement_friendly" value to true
-    /// </summary>
-    inline Hook* hkAchievementFriendly{};
-    inline char __fastcall achievementFriendlyHk(const char** a1, const char* valueName, __int64 resultPtr, char a4, char a5)
-    {
-        auto result = hkAchievementFriendly->original<decltype(&achievementFriendlyHk)>()(a1, valueName, resultPtr, a4, a5);
-
-        if (valueName && strcmp(valueName, "achievement_friendly") == 0 && resultPtr && !*(bool*)resultPtr)
-        {
-            *((bool*)resultPtr) = true;
-        }
-
-        return result;
-    }
 
     void loadConsole()
     {
@@ -126,38 +105,6 @@ public:\
         info("Initializing..");
 
         // create code patches
-        
-        // this patch is for disabling the games mod detection
-        auto modCheck = Patch(
-            "Mod Check",
-            {
-                0x31, // xor eax, eax
-                0xC0, //
-                0xC3, // ret
-            },
-            { 
-                {"E8 ? ? ? ? 84 ? ? ? ? 74 ? 41 ? ? 80 ? ? ? ? ? FB"},
-                {"E8 ? ? ? ? ? ? 74 ? ? 04 ? ? ? ? ? 00 00 FB"},
-            },
-            [](memory::handle& ptr) 
-            {
-                ptr = ptr.resolve_relative_call();
-                return true;
-            }
-        );
-
-        // this patch is for disabling a check within the function that references string "Achievement %d awarded"
-        auto achievementAwarded = Patch(
-            "Achievement Awarded",
-            {
-                0x90, // nop 
-                0x90  // nop
-            },
-            { 
-                {"48 ? ? ? ? ? ? 83 ? ? 01 75 ? E8 ? ? ? ? 4C", 11},
-                {"83 ? ? 75 ? ? ? ? ? ? ? ? ? ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 75 ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 41", 30}
-            });
-
 
         memory::handle consoleMessagePtr;
         if (!pattern::find_string_reference("$UsingConsoleMayDisableAchievements", &consoleMessagePtr))
@@ -177,6 +124,8 @@ public:\
         // this patch is for the message it shows in the mods loaded warning popup
         auto modsMessageText = StringRefPatch("Mods Message Text", "$LoadVanillaSaveWithMods");
         modsMessageText.set_text(MESSAGE);
+        auto newWithModsText = UTF16StringRefPatch("New Game With Mods", L"$ConfirmNew_Mods");
+        newWithModsText.set_text(WIDE_MESSAGE);
 
         // this patch is for disabling the console warning popup
         auto consoleMessage = Patch(
@@ -186,68 +135,35 @@ public:\
             },
             consoleMessagePtr);
 
-        // find Achievement Friendly
-        if (!pattern::find("C6 ? ? ? ? ? 01 4C ? ? ? ? ? ? C6 ? ? ? 00 ? ? ? 48 ? ? ? ? ? ? 48 ? ? ? ? E8 ? ? ? ? ? ? ? ? ? ? ? ? 4C ? ? ? ? ? ? C6 ? ? ? 00 45 ? ?", &pointers::jsonReadBool))
-        {
-            err("Couldn't Find \"Achievement Friendly\"");
-        }
-        else
-        {
-            pointers::jsonReadBool = pointers::jsonReadBool.add(35).rip();
-
-            info("Found \"Achievement Friendly\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::jsonReadBool.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
-            hkAchievementFriendly = new DetourHook("Achievement Friendly", pointers::jsonReadBool.raw(), achievementFriendlyHk);
-            if (!hkAchievementFriendly->enable())
-            {
-                info("Couldn't hook \"Achievement Friendly\"");
-            }
-            else
-            {
-                info("Hooked \"Achievement Friendly\"");
-            }
-        }
-
-        // find everModded
-        dbg("Attempting to find pattern for everModded");
-        if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
-        {
-            if (!pattern::find("04 75 ? ? ? ? ? ? ? 00 74 ? ? 01", &pointers::everModded))
-            {
-                err("Couldn't Find \"Ever Modded\"");
-            }
-            else
-            {
-                pointers::everModded = pointers::everModded.add(5).rip().add(1);
-
-                info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
-            }
-        }
-        else
-        {
-            pointers::everModded = pointers::everModded.add(24).rip().add(1);
-
-            info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
-        }
-        
         // these patches are for allowing the game to run properly while tabbed out
         auto backgroundCheck1 = Patch(
-            "Background Check 1",
+            "Is Running In The Background Check",
             {
-                0xEB, // jne -> jmp
+                0x90, // nop
+                0xE9  // jne -> jmp
             },
-            { {"75 ? 40 ? ? 75 ? 33 ? ? ? 01 E8 ? ? ? ? 48 ? ? ? ? ? ? 48 ? ? 74 ? 48 ? ? ? ? ? ? E8"} }, NULL);
+            { {"0F 85 ? ? ? ? 45 84 FF 0F 85 ? ? ? ? C6 45"} }, NULL);
 
-        modsMessageText.enable();
+        //Force the game into a vanilla state.
+        auto isCurrentSessionValid = Patch(
+            "Determine Achievement State",
+            {
+                0x90, // nop
+                0x90, // nop
+                0x90, // nop
+            },
+            { {"C6 00 01 48 8B 06 0F B6 08 33 C0"} }, NULL); //Look for Achievement %d awarded, it's the function called 3 times, then look for the instruction that sets the return parameter to 1. Should look something like mov byte ptr [rax], 1
+
         consoleMessageText.enable();
+        modsMessageText.enable();
+        newWithModsText.enable();
 
-        if (!modCheck.is_valid() || 
-            !modCheck.enable() ||
-            !achievementAwarded.is_valid() ||
-            !achievementAwarded.enable() ||
-            !pointers::everModded.raw())
+        if (!isCurrentSessionValid.is_valid() ||
+            !isCurrentSessionValid.enable())
         {
             consoleMessageText.set_text("Achievements: Off");
             modsMessageText.set_text("Achievements: Off");
+            newWithModsText.set_text(L"Achievements: Off");
         }
         else
         {
@@ -255,29 +171,27 @@ public:\
                 consoleMessage.enable();
         }
 
-        // Check if all patches and everModded are valid
-        if (!modCheck.is_valid() ||
-            !achievementAwarded.is_valid() ||
-            !hkAchievementFriendly->enabled() ||
+        if (settings.getRunInBackground() && backgroundCheck1.is_valid())
+        {
+            backgroundCheck1.enable();
+        }
+
+        // Check if all patches are valid
+        if (!isCurrentSessionValid.is_valid() || 
+            !backgroundCheck1.is_valid() ||
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
-            !consoleMessageText.is_valid() ||
-            !pointers::everModded.raw())
+            !consoleMessageText.is_valid())
         {
             const char* fmt =
                 "SFAE Version:\t%s\n"
                 "Main Module:\t%s\n\n"
                 "At least one signature has not been found\n"
-                "Mod Check:\t%s\n"
-                "Achi Awarded:\t%s\n"
-                "Achi Friendly:\t%s\n"
+                "Determined Mods:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
-                "Console Msg Text:\t%s\n"
-                "Ever Modded:\t%s\n\n"
-                "Will you get achievements?\n"
-                "With mods?\t%s\n"
-                "Using console?\t%s";
+                "Console Msg Text:\t%s\n\n"
+                "Will you get achievements?:\t%s";
 
             util::fmt_msgbox(
                 NULL,
@@ -286,47 +200,12 @@ public:\
                 fmt,
                 SFAE_VERSION,
                 memory::getCurrentModuleFileName().c_str(),
-                modCheck.is_valid() ? "Found" : "Not Found",
-                achievementAwarded.is_valid() ? "Found" : "Not Found",
-                hkAchievementFriendly->enabled() ? "Found" : "Not Found",
+                isCurrentSessionValid.is_valid() ? "Found" : "Not Found",
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
-                pointers::everModded.raw() ? "Found" : "Not Found",
-                (modCheck.is_valid() && modCheck.is_enabled()) ? "Yes" : "No",
-                pointers::everModded.raw() ? "Yes" : "No"
+                isCurrentSessionValid.is_valid() ? "Yes" : "No"
             );
-        }
-
-        if (settings.getRunInBackground() && backgroundCheck1.is_valid())
-        {
-            backgroundCheck1.enable();
-        }
-
-        // do not go into the loop if we did not find "Ever Modded"
-        if (pointers::everModded.raw())
-        {
-            // enter an infinite loop to monitor everModded for the duration of game session
-            // should run about 200 times per second
-
-            info("Monitoring \"Ever Modded\"");
-            CreateThread(nullptr, 0, [](PVOID) -> DWORD
-                {
-                    auto ptr = pointers::everModded.as<uint8_t*>();
-                    while (true)
-                    {
-
-                        // if everModded is not 0, change it back to 0
-                        if (*ptr != 0)
-                        {
-                            *ptr = 0;
-
-                            info("Blocked \"Ever Modded\" Change");
-                        }
-
-                        std::this_thread::sleep_for(5ms);
-                    }
-                }, 0, 0, 0);
         }
 
         if (settings.getEnableASILoader())
