@@ -211,17 +211,20 @@ public:\
 
         // Check if all patches are valid
         if (!isCurrentSessionValid.is_valid() || 
-            !backgroundCheck1.is_valid() ||
+            (!backgroundCheck1.is_valid() && settings.getRunInBackground()) ||
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
-            !pointers::everModded.raw())
+            !pointers::everModded.raw() ||
+            true)
         {
             const char* fmt =
                 "SFAE Version:\t%s\n"
                 "Main Module:\t%s\n\n"
                 "At least one signature has not been found\n"
+                ""
                 "Determined Mods:\t%s\n"
+                "backgroundCheck1:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
                 "Console Msg Text:\t%s\n"
@@ -236,6 +239,7 @@ public:\
                 SFAE_VERSION,
                 memory::getCurrentModuleFileName().c_str(),
                 isCurrentSessionValid.is_valid() ? "Found" : "Not Found",
+                backgroundCheck1.is_valid() ? "Found" : "Not Found",
                 pointers::everModded.raw() ? "Found" : "Not Found",
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
