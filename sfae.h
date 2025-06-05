@@ -215,8 +215,7 @@ public:\
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
             !consoleMessageText.is_valid() ||
-            !pointers::everModded.raw() ||
-            true)
+            !pointers::everModded.raw())
         {
             const char* fmt =
                 "SFAE Version:\t%s\n"
