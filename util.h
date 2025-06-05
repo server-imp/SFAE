@@ -105,10 +105,7 @@ namespace util
                 fs::remove(filePath);
                 return true;
             }
-            catch (const std::exception& ex) 
-            {
-                ;
-            }
+            catch (const std::exception&) {}
         }
 
         return false;

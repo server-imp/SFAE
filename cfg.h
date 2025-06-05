@@ -1,8 +1,6 @@
 #pragma once
-#ifndef _CFG
-#define _CFG
 #include "pch.h"
-#include "log.h";
+#include "log.h"
 #include "util.h"
 
 namespace cfg
@@ -315,5 +313,3 @@ namespace cfg
         }
     };
 }
-
-#endif
