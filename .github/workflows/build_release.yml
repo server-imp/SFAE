@@ -67,3 +67,5 @@ jobs:
           asset_path: x64\Release\vcruntime140_1.dll
           asset_name: vcruntime140_1.dll
           asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
