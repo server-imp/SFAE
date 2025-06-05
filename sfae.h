@@ -252,26 +252,20 @@ public:\
         if (pointers::everModded.raw())
         {
             // enter an infinite loop to monitor everModded for the duration of game session
-            // should run about 200 times per second
-
+            // should run about 10 times per second
             info("Monitoring \"Ever Modded\"");
-            CreateThread(nullptr, 0, [](PVOID) -> DWORD
+            std::thread([] {
+                auto ptr = pointers::everModded.as<uint8_t*>();
+                while (true)
                 {
-                    auto ptr = pointers::everModded.as<uint8_t*>();
-                    while (true)
+                    if (*ptr != 0)
                     {
-
-                        // if everModded is not 0, change it back to 0
-                        if (*ptr != 0)
-                        {
-                            *ptr = 0;
-
-                            info("Blocked \"Ever Modded\" Change");
-                        }
-
-                        std::this_thread::sleep_for(5ms);
+                        *ptr = 0;
+                        info("Blocked \"Ever Modded\" Change");
                     }
-                }, 0, 0, 0);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+            }).detach(); // Detach to allow independent execution
         }
 
         if (settings.getEnableASILoader())
