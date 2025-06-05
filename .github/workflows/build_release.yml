@@ -4,16 +4,16 @@ on:
   push:
     branches:
       - 'main'
-  pull_request:
-    branches:
-      - 'main'
+    tags:
+      - 'v*'
 
 jobs:
-  build:
+  build-artifact:
+    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
@@ -21,11 +21,46 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1
 
-      - name: Build Solution
+      - name: Build
         run: msbuild SFAE.sln /p:Configuration=Release /p:Platform=x64
 
-      - name: Upload Release.zip as Artifact
+      - name: Upload DLL Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Release
+          name: SFAE-DLL
           path: x64\Release\vcruntime140_1.dll
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Build
+        run: msbuild SFAE.sln /p:Configuration=Release /p:Platform=x64
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload DLL to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: x64\Release\vcruntime140_1.dll
+          asset_name: vcruntime140_1.dll
+          asset_content_type: application/octet-stream
