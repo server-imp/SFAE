@@ -57,6 +57,11 @@ public:\
         }
     } settings("sfae.cfg");
 
+    namespace pointers
+    {
+        memory::handle everModded;
+    }
+
     void loadConsole()
     {
         // we've moded over to a .cfg file instead of the console file,
@@ -103,6 +108,29 @@ public:\
 
         info("Version %s Loaded in %s", SFAE_VERSION, memory::getCurrentModuleFileName().c_str());
         info("Initializing..");
+
+        // find everModded pointer
+
+        dbg("Attempting to find pattern for everModded");
+        if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
+        {
+            if (!pattern::find("04 75 ? ? ? ? ? ? ? 00 74 ? ? 01", &pointers::everModded))
+            {
+                err("Couldn't Find \"Ever Modded\"");
+            }
+            else
+            {
+                pointers::everModded = pointers::everModded.add(5).rip().add(1);
+
+                info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            }
+        }
+        else
+        {
+            pointers::everModded = pointers::everModded.add(24).rip().add(1);
+
+            info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+        }
 
         // create code patches
 
@@ -158,17 +186,22 @@ public:\
         modsMessageText.enable();
         newWithModsText.enable();
 
-        if (!isCurrentSessionValid.is_valid() ||
-            !isCurrentSessionValid.enable())
+        if (!pointers::everModded.raw())
         {
             consoleMessageText.set_text("Achievements: Off");
-            modsMessageText.set_text("Achievements: Off");
-            newWithModsText.set_text(L"Achievements: Off");
         }
         else
         {
             if (!settings.getShowInGameMessage())
                 consoleMessage.enable();
+        }
+
+        if (!isCurrentSessionValid.is_valid() ||
+            !isCurrentSessionValid.enable() ||
+            !pointers::everModded.raw())
+        {
+            modsMessageText.set_text("Achievements: Off");
+            newWithModsText.set_text(L"Achievements: Off");
         }
 
         if (settings.getRunInBackground() && backgroundCheck1.is_valid())
@@ -181,7 +214,9 @@ public:\
             !backgroundCheck1.is_valid() ||
             !modsMessageText.is_valid() ||
             !consoleMessage.is_valid() ||
-            !consoleMessageText.is_valid())
+            !consoleMessageText.is_valid() ||
+            !pointers::everModded.raw() ||
+            true)
         {
             const char* fmt =
                 "SFAE Version:\t%s\n"
@@ -190,8 +225,9 @@ public:\
                 "Determined Mods:\t%s\n"
                 "Mods Msg Text:\t%s\n"
                 "Console Message:\t%s\n"
-                "Console Msg Text:\t%s\n\n"
-                "Will you get achievements?:\t%s";
+                "Console Msg Text:\t%s\n"
+                "everModded:\t%s\n\n"
+                "Achievements Enabled:\n  With Mods:\t\t%s\n  With Console Commands:\t%s";
 
             util::fmt_msgbox(
                 NULL,
@@ -201,11 +237,39 @@ public:\
                 SFAE_VERSION,
                 memory::getCurrentModuleFileName().c_str(),
                 isCurrentSessionValid.is_valid() ? "Found" : "Not Found",
+                pointers::everModded.raw() ? "Found" : "Not Found",
                 modsMessageText.is_valid() ? "Found" : "Not Found",
                 consoleMessage.is_valid() ? "Found" : "Not Found",
                 consoleMessageText.is_valid() ? "Found" : "Not Found",
-                isCurrentSessionValid.is_valid() ? "Yes" : "No"
+                isCurrentSessionValid.is_valid() ? "Yes" : "No",
+                pointers::everModded.raw() ? "Yes" : "No"
             );
+        }
+
+        // do not go into the loop if we did not find "Ever Modded"
+        if (pointers::everModded.raw())
+        {
+            // enter an infinite loop to monitor everModded for the duration of game session
+            // should run about 200 times per second
+
+            info("Monitoring \"Ever Modded\"");
+            CreateThread(nullptr, 0, [](PVOID) -> DWORD
+                {
+                    auto ptr = pointers::everModded.as<uint8_t*>();
+                    while (true)
+                    {
+
+                        // if everModded is not 0, change it back to 0
+                        if (*ptr != 0)
+                        {
+                            *ptr = 0;
+
+                            info("Blocked \"Ever Modded\" Change");
+                        }
+
+                        std::this_thread::sleep_for(5ms);
+                    }
+                }, 0, 0, 0);
         }
 
         if (settings.getEnableASILoader())
