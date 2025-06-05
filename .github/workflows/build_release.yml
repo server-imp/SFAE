@@ -1,0 +1,32 @@
+name: Build and Package SFAE
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            submodules: true
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build Solution
+        run: |
+          msbuild SFAE.sln /p:Configuration=Release /p:Platform=x64
+
+      - name: Upload Release.zip as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release
+          path: x64\Release\vcruntime140_1.dll
