@@ -239,7 +239,7 @@ namespace memory
                 }
                 else
                 {
-                    bytes.push_back(strtoul(i, &i, 16));
+                    bytes.push_back(static_cast<uint8_t>(strtoul(i, &i, 16)));
                     mask.push_back(1);
                 }
             }
@@ -312,7 +312,9 @@ namespace memory
             }
 
             if (closestMatch)
+            {
                 dbg("Failed to find pattern, closest match is 0x%p [%d/%d]", closestMatch, closestMatchCount, bytes.size());
+            }
 
             return false;
         }
@@ -536,7 +538,7 @@ namespace memory
                 if (pattern::find(pattern.pattern, &pointer, moduleName))
                 {
                     valid = true;
-                    pointer = pointer.add(pattern.offset);
+                    pointer = pointer.add(static_cast<int32_t>(pattern.offset));
                     break;
                 }
             }

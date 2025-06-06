@@ -24,7 +24,7 @@ namespace logging
         fprintf(logfile, "[%s] [%s] %02d:%02d:%02d ", HEADER, tag, local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
 
         va_list args;
-        va_start(args, _fmt);
+        va_start(args, fmt);
 
         vprintf(_fmt, args);
         vfprintf(logfile, _fmt, args);
@@ -49,7 +49,7 @@ namespace logging
             logfile = fopen(LOG_FILE, "w+");
 
         va_list args;
-        va_start(args, _fmt);
+        va_start(args, fmt);
 
         vprintf(_fmt, args);
         vfprintf(logfile, _fmt, args);
