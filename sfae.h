@@ -117,7 +117,7 @@ public:\
         }
         else
         {
-            err("Could not find everModded");
+            err("Could not find \"Ever Modded\"");
         }
 
         // create code patches
@@ -243,12 +243,12 @@ public:\
             // should run about 10 times per second
             info("Monitoring \"Ever Modded\"");
             std::thread([] {
-                auto ptr = pointers::everModded.as<uint8_t*>();
+                auto isModded = pointers::everModded.as<bool*>();
                 while (true)
                 {
-                    if (*ptr != 0)
+                    if (*isModded != false)
                     {
-                        *ptr = 0;
+                        *isModded = false;
                         info("Blocked \"Ever Modded\" Change");
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
