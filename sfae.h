@@ -155,20 +155,11 @@ public:\
         auto backgroundCheck1 = Patch(
             "Is Running In The Background Check",
             {
-                0x90, // nop
-                0xE9  // jne -> jmp
+                0xFF, // -1
             },
-            { {"0F 85 ? ? ? ? 45 84 FF 0F 85 ? ? ? ? C6 45"} }, NULL);
-
-        if (!backgroundCheck1.is_valid())
-        {
-            backgroundCheck1 = Patch(
-                "Is Running In The Background Check XBOX",
-                {
-                    0xEB, // jne -> jmp
-                },
-                { {"75 ? 45 84 FF 75 ? C6 45"} }, NULL);
-        }
+            { {"80 3D ? ? ? ? 00 0F 85 ? ? ? ? 45 84 FF", 6}, //Steam
+              {"80 3D ? ? ? ? 00 75 ? 45 84 FF 75 ? C6 45", 6} //GamePass
+            }, NULL);
 
         //Force the game into a vanilla state.
         auto isCurrentSessionValid = Patch(
