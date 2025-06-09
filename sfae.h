@@ -10,7 +10,7 @@
 #include "memory.h"
 #include "hook.h"
 
-#define SFAE_VERSION "2.0.1"
+#define SFAE_VERSION "2.0.2"
 
 const char* MESSAGE = "SFAE Version " SFAE_VERSION ":\nAchievements are enabled!";
 const wchar_t* WIDE_MESSAGE = L"SFAE Version " SFAE_VERSION L":\nAchievements are enabled!";
@@ -110,26 +110,14 @@ public:\
         info("Initializing..");
 
         // find everModded pointer
-
-        dbg("Attempting to find pattern for everModded");
-        if (!pattern::find("40 ? 48 ? ? ? 48 ? ? ? ? ? ? 4C ? ? ? ? ? ? ? ? C6 ? ? ? ? ? 01 E8 ? ? ? ? 65 ? ? ? ? ? ? ? ? 48 ? ? B8 ? ? ? ? ? ? ? 00 75", &pointers::everModded))
+        if (pattern::find("C6 05 ? ? ? ? 01 80 E2", &pointers::everModded)) //Generated on 1.7.33
         {
-            if (!pattern::find("04 75 ? ? ? ? ? ? ? 00 74 ? ? 01", &pointers::everModded))
-            {
-                err("Couldn't Find \"Ever Modded\"");
-            }
-            else
-            {
-                pointers::everModded = pointers::everModded.add(5).rip().add(1);
-
-                info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
-            }
+            pointers::everModded = pointers::everModded.add(2).rip().add(1);
+            info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uintptr_t>() - reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr)));
         }
         else
         {
-            pointers::everModded = pointers::everModded.add(24).rip().add(1);
-
-            info("Found \"Ever Modded\" -> %s+%08X", memory::getCurrentModuleFileName().c_str(), pointers::everModded.as<uint8_t*>() - (uint8_t*)GetModuleHandle(0));
+            err("Could not find \"Ever Modded\"");
         }
 
         // create code patches
@@ -255,12 +243,12 @@ public:\
             // should run about 10 times per second
             info("Monitoring \"Ever Modded\"");
             std::thread([] {
-                auto ptr = pointers::everModded.as<uint8_t*>();
+                auto isModded = pointers::everModded.as<bool*>();
                 while (true)
                 {
-                    if (*ptr != 0)
+                    if (*isModded != false)
                     {
-                        *ptr = 0;
+                        *isModded = false;
                         info("Blocked \"Ever Modded\" Change");
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
