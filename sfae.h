@@ -64,24 +64,6 @@ public:\
 
     void loadConsole()
     {
-        // we've moded over to a .cfg file instead of the console file,
-        // but for now we'll update the cfg setting if the console file exists
-        std::filesystem::path currentDirectory = std::filesystem::current_path();
-
-        auto
-            file1 = currentDirectory / "sfae.console",
-            file2 = currentDirectory / "sfae.console.txt";
-
-        if (fs::exists(file1) ||
-            fs::exists(file2))
-        {
-            if (!settings.getShowConsole())
-                settings.setShowConsole(true);
-
-            util::remove_file(file1);
-            util::remove_file(file2);
-        }
-
         if (
             settings.getShowConsole() &&
             AllocConsole() &&
