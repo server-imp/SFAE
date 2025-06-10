@@ -223,18 +223,23 @@ public:\
         if (pointers::everModded.raw())
         {
             // enter an infinite loop to monitor everModded for the duration of game session
-            // should run about 10 times per second
+            // should run about 20 times per second
             info("Monitoring \"Ever Modded\"");
             std::thread([] {
                 auto isModded = pointers::everModded.as<bool*>();
                 while (true)
                 {
+#ifdef _DEBUG
                     if (*isModded != false)
                     {
                         *isModded = false;
-                        info("Blocked \"Ever Modded\" Change");
+                        dbg("Blocked \"Ever Modded\" Change");
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+#else
+                    *isModded = false;
+#endif // _DEBUG
+                    
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
             }).detach(); // Detach to allow independent execution
         }
