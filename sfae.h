@@ -10,7 +10,7 @@
 #include "memory.h"
 #include "hook.h"
 
-#define SFAE_VERSION "2.0.2"
+#define SFAE_VERSION "2.0.3"
 
 const char* MESSAGE = "SFAE Version " SFAE_VERSION ":\nAchievements are enabled!";
 const wchar_t* WIDE_MESSAGE = L"SFAE Version " SFAE_VERSION L":\nAchievements are enabled!";
