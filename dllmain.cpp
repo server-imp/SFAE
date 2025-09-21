@@ -2,10 +2,10 @@
 #include "sfae.h"
 
 // vcruntime140_1.dll exports
-#define DLLPATH "\\\\.\\GLOBALROOT\\SystemRoot\\System32\\vcruntime140_1.dll"
-#pragma comment(linker, "/EXPORT:___CxxFrameHandler4=" DLLPATH ".__CxxFrameHandler4")
-#pragma comment(linker, "/EXPORT:___NLG_Dispatch2=" DLLPATH ".__NLG_Dispatch2")
-#pragma comment(linker, "/EXPORT:___NLG_Return2=" DLLPATH ".__NLG_Return2")
+#define MAKE_EXPORT(func) "/EXPORT:" func "=\\\\.\\GLOBALROOT\\SystemRoot\\System32\\vcruntime140_1.dll." func
+#pragma comment(linker, MAKE_EXPORT("__CxxFrameHandler4"))
+#pragma comment(linker, MAKE_EXPORT("__NLG_Dispatch2"))
+#pragma comment(linker, MAKE_EXPORT("__NLG_Return2"))
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
