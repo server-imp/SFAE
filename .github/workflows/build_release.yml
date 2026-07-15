@@ -1,20 +1,14 @@
-name: Build and Package SFAE
+name: Build and Release
 
 on:
-  push:
-    branches:
-      - 'main'
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-artifact:
-    if: github.ref == 'refs/heads/main'
+  build-and-release:
     runs-on: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,36 +20,13 @@ jobs:
 
       - name: Build
         run: msbuild SFAE.sln /p:Configuration=Release /p:Platform=x64
-
-      - name: Upload DLL Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SFAE-DLL
-          path: x64\Release\vcruntime140_1.dll
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
-
-      - name: Build
-        run: msbuild SFAE.sln /p:Configuration=Release /p:Platform=x64
-
+          
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
+          release_name: draft_release
+          draft: true
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
