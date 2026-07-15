@@ -139,8 +139,8 @@ public:\
             {
                 0xFF, // -1
             },
-            { {"80 3D ? ? ? ? 00 0F 85 ? ? ? ? 45 84 FF", 6}, //Steam
-              {"80 3D ? ? ? ? 00 75 ? 45 84 FF 75 ? C6 45", 6} //GamePass
+            { {"80 3D ? ? ? ? 00 0F 85 ? ? ? ? 45 84 F6", 6}, //Steam
+              {"80 3D ? ? ? ? 00 75 ? 45 84 F6 75 ? C6 45", 6} //GamePass
             }, NULL);
 
         //Force the game into a vanilla state.
